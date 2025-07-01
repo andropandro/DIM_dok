@@ -1,13 +1,51 @@
-# DIMService - Digital Stämpeltjänst
+# DIM - Digital Informationsmarkering
 
 ## Översikt
 
-DIMService är en Windows Service-applikation som tillhandahåller HTTP-baserade API:er för att skapa digitala säkerhetsstämplar för dokumentklassificering. Tjänsten är specialiserad på att generera stämplar enligt svenska offentlighets- och sekretesslagen (OSL) och stödjer olika sekretessklassificeringar och säkerhetsskyddsklasser.
+DIM (Digital Informationsmarkering) är en komplett lösning för att skapa digitala säkerhetsstämplar för dokumentklassificering enligt svenska offentlighets- och sekretesslagen (OSL). Lösningen består av tre sammanhängande komponenter som tillsammans tillhandahåller både automatiserad API-baserad och manuell stämpelgenerering.
 
-## Arkitektur
+### Systemkomponenter
 
-### Huvudkomponenter
+```
+DIM-lösningen/
+├── DIMService/                    - Windows Service med HTTP API
+├── DIM/                          - Windows Forms GUI-klient
+└── DIMServiceWiXSharpInstaller/  - MSI-installationspaket
+```
 
+## Lösningsarkitektur
+
+### Komponentöversikt
+
+```mermaid
+graph TB
+    subgraph "DIM-lösning"
+        A[DIM klient<br/>Windows Forms GUI] --> B[DIMService<br/>Windows Service]
+        C[Externa applikationer<br/>HTTP API-anrop] --> B
+        B --> D[Stämpelgenerering<br/>EMF, PNG, SVG]
+        E[DIMServiceWiXSharpInstaller<br/>MSI-paket] --> F[Systeminstallation]
+        F --> A
+        F --> B
+    end
+```
+
+### Teknisk Stack
+
+- **Framework**: .NET 8.0 (Windows-specifik)
+- **Arkitektur**: Service-oriented med HTTP API och GUI-klient
+- **Bildhantering**: System.Drawing.Common, SVG.NET
+- **Installation**: WiX Sharp för MSI-paket
+- **Hosting**: Microsoft.Extensions.Hosting.WindowsServices
+- **Konfiguration**: JSON-baserad med hot-reload-stöd
+
+## Komponentbeskrivning
+
+## 1. DIMService - Stämpelgenereringstjänst
+
+### Syfte
+Windows Service som tillhandahåller HTTP-baserade API:er för automatiserad stämpelgenerering. Huvudkomponenten i lösningen som hanterar all stämpellogik.
+
+### Arkitektur
 ```
 DIMService/
 ├── Program.cs              - Applikationens startpunkt och värdkonfiguration
@@ -23,191 +61,195 @@ DIMService/
     └── config DIMService.json - Standardkonfiguration
 ```
 
-### Teknisk Stack
+### Funktionalitet
+- **HTTP API-server**: Lyssnar på konfigurerad port (standard: 8080)
+- **Stämpelgenerering**: Stödjer EMF, PNG och SVG-format
+- **Sekretessklassificering**: Implementerar OSL-kompatibla klassificeringar
+- **Metadata-hantering**: Inbäddning av dokumentspårbarhet
+- **Konfigurationshantering**: Hot-reload av JSON-konfiguration
+- **Loggning**: EventLog och filbaserad felhantering
 
-- **Framework**: .NET 8.0 (Windows-specifik)
-- **Arkitektur**: Windows Service med HTTP-listener
-- **Bildhantering**: System.Drawing.Common, SVG.NET
-- **Hosting**: Microsoft.Extensions.Hosting.WindowsServices
-- **Konfiguration**: JSON-baserad med hot-reload-stöd
-- **Loggning**: Microsoft.Extensions.Logging med EventLog-integration
-
-## Komponentbeskrivning
-
-### Program.cs
-**Syfte**: Applikationens huvudklass och konfiguration av värdtjänsten.
-
-**Funktionalitet**:
-- Konfigurerar IHostBuilder för Windows Service-integration
-- Ställer in loggning (EventLog och Console)
-- Registrerar Worker som hosted service
-- Hanterar dependency injection-containern
-
-### Worker.cs
-**Syfte**: Huvudarbetarklass som hanterar tjänstens livscykel.
-
-**Funktionalitet**:
-- Initierar HTTP-servern vid uppstart
-- Hanterar konfigurationsladdning
-- Skapar och underhåller filsystemsstruktur
-- Rensar temporära filer vid uppstart
-- Migrerar konfigurationsfiler till rätt kataloger
-
-**Filsystemsstruktur**:
+### Filsystemsstruktur
 ```
 %ALLUSERSPROFILE%/DIM/
-├── Config/         - Konfigurationsfiler
-├── Temp/          - Temporära stämpelfiler
-└── Fellogg/       - Felloggar
+├── Config/         - Konfigurationsfiler för båda applikationer
+├── Temp/          - Temporära stämpelfiler från DIMService
+└── Fellogg/       - Felloggar från DIMService
 ```
 
-### HttpServer.cs
-**Syfte**: HTTP-server som exponerar REST API:er för stämpelgenerering.
+## 2. DIM - GUI-klient
 
-**Teknisk implementation**:
-- Använder HttpListener för HTTP-hantering
-- CORS-stöd för webbapplikationsintegration
-- Endast GET-requests stöds
-- Asynkron hantering av inkommande requests
-- Comprehensive felhantering och loggning
+### Syfte
+Windows Forms-applikation som tillhandahåller ett användarvänligt grafiskt gränssnitt för manuell stämpelgenerering. Konsumerar DIMService:s API:er via HTTP-anrop.
 
-**Stämpelgenereringsengine**:
-- Stödjer tre bildformat: EMF (Enhanced Metafile), PNG, SVG
-- Vektorbaserad rendering med Graphics2D
-- Skalbar arkitektur för flera samtidiga stämplar
-- Automatisk storleksanpassning baserat på innehåll
-- Metadata-inbäddning enligt olika standarder
+### Arkitektur
+```
+DIM/
+├── Program.cs              - Applikationsstartpunkt och HTTP-kommunikation
+├── MainForm.cs/Designer.cs - Huvudformulär och UI-logik
+├── KonfigData.cs           - Konfigurationsdatastruktur (förenklad)
+├── KonfigHanterare.cs      - Konfigurationshantering för klienten
+├── Repository.cs           - Gemensamma funktioner och konstanter
+├── ClipboardMetafile.cs    - Urklippshantering för vektorbilder
+├── ErrorResponse.cs        - Felhantering från service-anrop
+├── DIMServiceException.cs  - Specialiserad felklass
+└── Json/
+    └── config DIM.json     - Klientkonfiguration
+```
 
-### KonfigData.cs
-**Syfte**: Definierar datastrukturer för konfigurationshantering.
+### Funktionalitet
+- **Service-kommunikation**: Verifierar DIMService-tillgänglighet vid start
+- **Interaktiv stämpelgenerering**: Steg-för-steg-guidning för användare
+- **Förhandsvisning**: Visar genererade stämplar i realtid
+- **Formathantering**: Stöder alla DIMService-format med konvertering
+- **Konfigurationssynkronisering**: Hämtar aktuella inställningar från service
+- **Felhantering**: Användarvänlig visning av service-fel
 
-**Klasser**:
-- `KonfigData`: Huvudkonfiguration (port, format, sekretess, standardvärden)
-- `SekretessData`: Sekretessklassificeringar med paragrafer och SSK
-- `KonfigRad`: Grundläggande kod-text-par
-- `Defaultvarde`: Standardvärden med numeriska värden
+### Användargränssnitt
+- **Sekretessval**: Dropdown för sekretessklassificering (Hemlig, SK, etc.)
+- **Paragrafval**: Checkboxar för tillämpliga OSL-paragrafer
+- **Dimensionering**: Anpassningsbara stämpelstorlekar med proportionslåsning
+- **Förhandsvisning**: Visar stämpel före export
+- **Export**: Spara till fil eller kopiera till urklipp
 
-### StampelInfo.cs & StampelRetur.cs
-**Syfte**: Datastrukturer för stämpelhantering.
+### Teknisk Implementation
+- **HTTP-klient**: Asynkron kommunikation med DIMService
+- **SVG-hantering**: Konvertering till Metafile för Windows-kompatibilitet
+- **Urklippsintegration**: Metafile-support för vektorbilder
+- **Skalning**: Automatisk proportionsberäkning för olika format
 
-**StampelInfo innehåller**:
-- Sekretessnivå och rubrik
-- Paragraftext enligt OSL
-- Datum och verksamhetsinformation
-- Arbetshandlingsflaggor
+## 3. DIMServiceWiXSharpInstaller - MSI-installationspaket
 
-**StampelRetur innehåller**:
-- Genererade bilddata (MemoryStream)
-- Metafile-objekt för vektordata
-- SVG-dokument för skalbar vektorgrafik
-- Filsökvägar för temporära filer
+### Syfte
+Skapar ett professionellt MSI-installationspaket som installerar både DIMService som Windows Service och DIM-klienten med alla nödvändiga komponenter.
+
+### Installation Components
+```
+MSI-paket innehåller:
+├── DIMService/
+│   ├── Windows Service-installation med NetworkService-konto
+│   ├── Automatisk start vid systemstart
+│   └── Komplett runtime-paket (.NET 8.0)
+├── DIM/
+│   ├── GUI-applikation
+│   ├── Skrivbordsgenväg
+│   └── Startmeny-genväg
+├── Konfigurationsfiler/
+│   ├── config DIMService.json (i ProgramData)
+│   └── config DIM.json (i ProgramData)
+└── Dependencies/
+    ├── .NET 8.0 runtime-komponenter
+    └── Windows-specifika bibliotek
+```
+
+### Funktionalitet
+- **Versionhantering**: Automatisk versionsdetektering från DIMService.exe
+- **Uppgraderingslogik**: Major upgrade-support för säkra uppdateringar
+- **Service-installation**: Automatisk registrering som Windows Service
+- **Rättighetskonfiguration**: NetworkService-konto för säker drift
+- **Avinstallation**: Komplett borttagning inklusive service-avregistrering
+
+### Build-process
+```xml
+<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <Exec Command="$(TargetPath)" />
+</Target>
+```
+- **Automatisk byggnation**: Genererar MSI direkt efter build
+- **Dependency-detection**: Inkluderar alla required runtime-komponenter
+- **Versionerade filer**: MSI-namn inkluderar versionsnummer
 
 ## API-Dokumentation
 
-### Övergripande API-beteende
-- **Bas-URL**: `http://localhost:[konfigurerad port]/`
-- **HTTP-metod**: Endast GET stöds
-- **CORS**: Aktiverat för alla domäner
-- **Svarformat**: JSON eller plaintext beroende på endpoint
+### HTTP API (DIMService)
 
-### Administrativa Endpoints
+#### Bas-URL
+`http://localhost:[konfigurerad port]/` (standard: 8080)
 
-#### `/isrunning`
-**Syfte**: Hälsokontroll för tjänsten
-**Svar**: `"true"` som plaintext
+#### Administrativa Endpoints
 
-#### `/config`
-**Syfte**: Returnerar aktuell konfiguration
-**Svar**: JSON-objekt med komplett konfiguration
+##### `/isrunning`
+- **Metod**: GET
+- **Syfte**: Hälsokontroll för tjänsten
+- **Svar**: `"true"` som plaintext
 
-### Informationsendpoints
+##### `/config`
+- **Metod**: GET
+- **Syfte**: Returnerar aktuell konfiguration
+- **Svar**: JSON-objekt med komplett konfiguration
 
-#### `/fellogg` / `/felloggtext`
-**Syfte**: Hämtar senaste felloggar
-**Svar**: JSON-array eller formaterad text med felloggar
+#### Informationsendpoints
 
-#### `/format` / `/formattext`
-**Syfte**: Listar tillgängliga bildformat
-**Svar**: JSON-array eller text med formatinformation
+##### `/fellogg` / `/felloggtext`
+- **Metod**: GET
+- **Syfte**: Hämtar senaste felloggar
+- **Svar**: JSON-array eller formaterad text
 
-#### `/defaultvarden` / `/defaultvardentext`
-**Syfte**: Returnerar systemets standardvärden
-**Svar**: JSON-array eller text med standardkonfiguration
+##### `/format` / `/formattext`
+- **Metod**: GET
+- **Syfte**: Listar tillgängliga bildformat
+- **Svar**: JSON-array eller text med formatinformation
 
-#### `/paragrafer` / `/paragrafertext`
-**Parametrar**: `sekretess` (obligatorisk)
-**Syfte**: Hämtar paragrafer för angiven sekretessnivå
-**Svar**: JSON-array eller text med paragrafdata
+##### `/paragrafer` / `/paragrafertext`
+- **Metod**: GET
+- **Parametrar**: `sekretess` (obligatorisk)
+- **Syfte**: Hämtar paragrafer för angiven sekretessnivå
+- **Svar**: JSON-array eller text med paragrafdata
 
-#### `/ssk` / `/ssktext`
-**Parametrar**: `sekretess` (standard: "Hemlig")
-**Syfte**: Hämtar säkerhetsskyddsklasser för sekretessnivå
-**Svar**: JSON-array eller text med SSK-data
+##### `/ssk` / `/ssktext`
+- **Metod**: GET
+- **Parametrar**: `sekretess` (standard: "Hemlig")
+- **Syfte**: Hämtar säkerhetsskyddsklasser
+- **Svar**: JSON-array eller text med SSK-data
 
-### Stämpelgenereringsendpoints
+#### Stämpelgenereringsendpoints
 
-#### `/stampel` / `/stampelurl`
-**Syfte**: Genererar kompletta säkerhetsstämplar
+##### `/stampel` / `/stampelurl`
+- **Metod**: GET
+- **Syfte**: Genererar kompletta säkerhetsstämplar
 
-**Obligatoriska parametrar per sekretessnivå**:
+**Obligatoriska parametrar**:
 - `sekretess`: Sekretesskod (t.ex. "Hemlig", "SK")
 - `paragrafer`: Kommaseparerade paragrafkoder
-
-**Obligatoriska för SK-sekretess**:
-- `ssk`: Säkerhetsskyddsklassifikation
+- `ssk`: Säkerhetsskyddsklassifikation (för SK-sekretess)
 
 **Valfria parametrar**:
 - `datum`: Datum (standard: dagens datum)
-- `arbetshandling`: Flagga för arbetshandling
-- `bredd`: Stämpelbredd i pixlar
-- `hojd`: Stämpelhöjd i pixlar
-- `orientering`: "h" (horisontell) eller "v" (vertikal)
-- `vhtnamn`: Verksamhetsnamn
+- `bredd`, `hojd`: Stämpelstorlek i pixlar
 - `format`: Bildformat ("emf", "png", "svg")
+- `orientering`: "h" eller "v"
+- `vhtnamn`: Verksamhetsnamn
 
-**Returvärden**:
-- `/stampel`: Binär bilddata
-- `/stampelurl`: Filsökväg till sparad fil
-
-#### `/stampelhanvisning` / `/stampelhanvisningurl`
-**Syfte**: Genererar hänvisningsstämplar för flersidiga dokument
-
-**Parametrar**:
-- `ssk`: Säkerhetsskyddsklassifikation (obligatorisk)
-- `bredd`, `hojd`, `format`: Som för `/stampel`
+##### `/stampelhanvisning` / `/stampelhanvisningurl`
+- **Metod**: GET
+- **Syfte**: Genererar hänvisningsstämplar för flersidiga dokument
+- **Parametrar**: `ssk` (obligatorisk), samt storlek och format
 
 ## Stämpelgenereringsprocess
 
 ### Teknisk Implementation
 
 #### Vektorbaserad Rendering (EMF/SVG)
-1. **EMF-generering**: Använder Windows GDI+ Metafile-API
-2. **SVG-generering**: Använder SVG.NET-biblioteket
-3. **Gemensam renderingspipeline**: Textlayout, färghantering, ramskapande
+1. **EMF-generering**: Windows GDI+ Metafile-API
+2. **SVG-generering**: SVG.NET-biblioteket med XML-export
+3. **Renderingspipeline**: Gemensam textlayout och färghantering
 
 #### Rasterbild-rendering (PNG)
-1. Genererar först EMF-vektorbild
+1. Genererar EMF-vektorbild först
 2. Renderar till Bitmap med anti-aliasing
 3. Exporterar som PNG med optimal komprimering
 
 #### Metadata-hantering
-Alla stämplar får automatisk metadata enligt följande standarder:
-
 **PNG-metadata** (iTXt-chunks):
-- `data-creator`: Applikationsnamn
-- `data-title`: Stämpelrubrik
-- `data-description`: Kombinerad beskrivning
-- `data-created`: Skapandetidpunkt
-- `data-query`: Original-querysträng
+- `data-creator`, `data-title`, `data-description`
+- `data-created`, `data-query`
 
-**EMF-metadata** (Comment Records + Property Items):
+**EMF-metadata** (Comment Records):
 - XML-formaterad metadata i EMF-kommentarer
 - XMP-metadata för verktygskompatibilitet
-- Property Items för Windows-integration
 
-**SVG-metadata** (Standard SVG-element):
+**SVG-metadata** (Standard-element):
 - Dublin Core-metadata
-- Custom namespace för DIMService-specifik data
 - W3C-kompatibel metadatastruktur
 
 ### Stämpeltyper
@@ -220,17 +262,19 @@ Alla stämplar får automatisk metadata enligt följande standarder:
 
 #### SK-stämplar (Säkerhetsskyddad)
 - Paragraftext överst
-- Sekretessklassificering
+- Sekretessklassificering med SSK
 - Samma färgschema och layout
 
 #### Hänvisningsstämplar
 - Kompakt format för flersidiga dokument
-- SSK-klassificering
-- "Se sid 1" hänvisning
+- SSK-klassificering med "Se sid 1"-hänvisning
 
 ## Konfigurationshantering
 
-### Konfigurationsfil (JSON)
+### Gemensam Konfigurationsstruktur
+Både DIM och DIMService använder JSON-baserad konfiguration lagrad i `%ALLUSERSPROFILE%\DIM\Config\`:
+
+#### DIMService-konfiguration
 ```json
 {
   "Lyssnarport": 8080,
@@ -240,58 +284,41 @@ Alla stämplar får automatisk metadata enligt följande standarder:
 }
 ```
 
+#### DIM-klientkonfiguration
+```json
+{
+  "Lyssnarport": 8080,
+  "ServiceURL": "//localhost"
+}
+```
+
 ### Hot-reload-stöd
-- Konfigurationsändringar detekteras automatiskt
-- Ingen omstart av tjänsten krävs
-- Felhantering vid ogiltiga konfigurationer
+- **DIMService**: Automatisk detektering av konfigurationsändringar
+- **DIM-klient**: Laddar om konfiguration vid nästa start
+- **Synkronisering**: Klient hämtar aktuella värden från service
 
-### Standardvärden
-- Bredd: 302 pixlar
-- Höjd: 182 pixlar (stämpel) / 66 pixlar (hänvisning)
-- Format: EMF
-- Orientering: Horisontell
+## Installation och Deployment
 
-## Säkerhet och Compliance
+### Systemkrav
+- **OS**: Windows 10/11 eller Windows Server 2019+
+- **Framework**: .NET 8.0 Runtime (inkluderas i MSI)
+- **Privilegier**: Administratörsbehörighet för installation
+- **Git**: Krävs för automatisk versionering vid build
 
-### Säkerhetsaspekter
-- Endast lokala anslutningar (localhost)
-- Ingen autentisering (förutsätter säker nätverksmiljö)
-- Minimal attack surface (endast GET-requests)
-- Validering av alla inparametrar
+### Installationsprocess
+1. **MSI-körning**: Dubbelklick på DIM_[version].msi
+2. **Service-installation**: DIMService registreras automatiskt
+3. **Klientinstallation**: DIM-applikation med genvägar
+4. **Konfiguration**: Standardfiler kopieras till ProgramData
+5. **Service-start**: DIMService startar automatiskt
 
-### Compliance
-- Följer svenska offentlighets- och sekretesslagen (OSL)
-- Stöder standardiserade sekretessklassificeringar
-- Metadata-spårbarhet för dokument
+### Build och Distribution
 
-## Felsökning och Underhåll
-
-### Loggning
-- **EventLog**: Systemfel och viktiga händelser
-- **Console**: Utvecklingsloggning
-- **Fellogg-filer**: Detaljerad JSON-baserad felspårning
-
-### Vanliga Problem
-1. **Port redan upptagen**: Ändra `Lyssnarport` i konfiguration
-2. **Git-versionering misslyckas**: Kontrollera Git-tillgänglighet i PATH
-3. **Stämpelgenerering misslyckas**: Kontrollera diskutrymme i temp-katalog
-
-### Prestanda
-- **Minneshantering**: Automatisk cleanup av temporära filer
-- **Samtidiga requests**: Asynkron hantering utan blocking
-- **Bildoptimering**: Skalbar vektorrendering innan rasterkonvertering
-
-## Byggprocess och Deployment
-
-### Versionering
-- Automatisk versionshantering baserat på Git-commits
-- Format: `Major.Minor.CommitCount`
-- MSBuild-integration för CI/CD
-
-### Build-konfiguration
+#### Automatisk Versionering
+Alla projekt använder Git-baserad versionering:
 ```xml
 <Target Name="GetGitCommitCount" BeforeTargets="GetAssemblyVersion">
-  <Exec Command="git rev-list --count HEAD" ConsoleToMSBuild="true" IgnoreExitCode="false">
+  <Exec Command="git rev-list --count HEAD">
     <Output TaskParameter="ConsoleOutput" PropertyName="GitCommitCount" />
   </Exec>
   <PropertyGroup>
@@ -300,40 +327,94 @@ Alla stämplar får automatisk metadata enligt följande standarder:
 </Target>
 ```
 
-### Systemkrav
-- Windows 10/11 eller Windows Server 2019+
-- .NET 8.0 Runtime
-- Git (för automatisk versionering)
-- Administratörsbehörighet för Windows Service-installation
+#### Build-sekvens
+1. **DIMService**: Bygg och publicera för win-x64
+2. **DIM**: Bygg och publicera för win-x64
+3. **Installer**: Skapa MSI med versionerade komponenter
+
+## Säkerhet och Compliance
+
+### Säkerhetsaspekter
+- **Nätverksbindning**: Endast localhost-anslutningar
+- **Service-konto**: NetworkService för minimal systemåtkomst
+- **API-begränsning**: Endast GET-requests, ingen autentisering
+- **Filbehörigheter**: Begränsade skrivrättigheter till ProgramData
+
+### Compliance
+- **OSL-efterlevnad**: Implementerar svenska offentlighets- och sekretesslagen
+- **Standardiserad klassificering**: Förutsatta sekretessklasser och paragrafer
+- **Dokumentspårbarhet**: Metadata för alla genererade stämplar
+- **Arkivering**: Temporära filer för revisionsändamål
+
+## Felsökning och Underhåll
+
+### Vanliga Problem
+
+#### DIMService
+1. **Port upptagen**: Ändra `Lyssnarport` i konfiguration
+2. **Service startar inte**: Kontrollera EventLog för fel
+3. **API ej tillgängligt**: Verifiera Windows Firewall-inställningar
+
+#### DIM-klient
+1. **"Kunde inte hitta servicen"**: Kontrollera att DIMService körs
+2. **Konfigurationsfel**: Verifiera JSON-syntax i config-filer
+3. **Stämpel visas ej**: Kontrollera bildformat-kompatibilitet
+
+#### Installer
+1. **MSI-byggnation misslyckas**: Kontrollera att DIMService och DIM är byggda
+2. **Versionering misslyckas**: Verifiera Git-tillgänglighet i PATH
+3. **Installation misslyckas**: Kör som administratör
+
+### Loggning
+- **DIMService EventLog**: Systemfel och viktiga händelser
+- **DIMService Fellogg**: JSON-baserad detaljerad felspårning
+- **DIM-klient**: Visar service-fel i användargränssnittet
+- **MSI-installation**: Windows Installer-loggar
+
+### Prestanda
+- **Minneshantering**: Automatisk cleanup av temporära filer
+- **Samtidiga requests**: Asynkron hantering utan blocking
+- **GUI-responsivitet**: Asynkron service-kommunikation
+- **Bildoptimering**: Vektorrendering före rasterkonvertering
+
+## Framtida Utveckling
+
+### Planerade Förbättringar
+1. **Webbaserad klient**: Modern webbgränssnitt som komplement till WinForms
+2. **REST API-expansion**: Stöd för POST-requests och JSON-payloads
+3. **Autentisering**: JWT eller API-key-baserad säkerhet
+4. **Databas-integration**: Persistering av stämpelhistorik
+5. **Bulk-processing**: Batch-generering av stämplar
+
+### Teknisk Modernisering
+1. **Cross-platform**: Migration till .NET Core för Linux-support
+2. **Containerisering**: Docker-support för enklare deployment
+3. **Cloud-integration**: Azure/AWS-deployment-alternativ
+4. **API-dokumentation**: OpenAPI/Swagger-specifikation
+5. **Enhetstester**: Utökad testning av alla komponenter
+
+### Arkitektoniska Förbättringar
+1. **Microservices**: Uppdelning av funktionalitet
+2. **Message queuing**: Asynkron stämpelbearbetning
+3. **Load balancing**: Stöd för flera service-instanser
+4. **Centraliserad konfiguration**: Delad konfigurationshantering
+5. **Monitoring**: Applikationsövervakning och metrics
 
 ## Tekniska Begränsningar
 
 ### Plattformsbegränsningar
-- **Windows-specifik**: System.Drawing.Common kräver Windows
+- **Windows-specifik**: System.Drawing.Common och Windows Services
 - **GDI+-beroende**: EMF-generering kräver Windows GDI+
-- **Service-integration**: Windows Service-specifik hosting
-
-### Prestandabegränsningar
-- **Minnesförbrukning**: Stämpelgenerering håller bilddata i minnet
-- **Samtidiga användare**: Begränsas av HttpListener-prestanda
-- **Filsystemsberoende**: Temporära filer kräver diskutrymme
+- **WinForms-GUI**: Endast Windows desktop-support
 
 ### Funktionella Begränsningar
-- **Endast GET-requests**: Ingen POST/PUT-support
-- **Lokal binding**: Endast localhost-anslutningar
-- **Statisk konfiguration**: Viss konfiguration kräver omstart
+- **Lokal kommunikation**: Endast localhost HTTP-binding
+- **Synkron GUI**: WinForms-begränsningar för asynkron UI
+- **Statisk konfiguration**: Vissa inställningar kräver omstart
+- **Minnesintensiv**: Bildgenerering håller data i minnet
 
-## Framtida Utveckling
-
-### Föreslagna Förbättringar
-1. **REST API-expansion**: Stöd för POST-requests och JSON-payloads
-2. **Autentisering**: JWT eller API-key-baserad säkerhet
-3. **Dockerisering**: Containeriserad deployment
-4. **Databas-integration**: Persistering av stämpeldata
-5. **Batch-processing**: Samtidig generering av flera stämplar
-
-### Teknisk Skuld
-- Beroende av System.Drawing.Common (legacy)
-- Hårdkodade färgvärden
-- Begränsad felhantering för nätverksfel
-- Saknad integrationstest-täckning 
+### Skalbarhetsbegränsningar
+- **Single-instance**: Endast en DIMService per maskin
+- **Filsystemsberoende**: Begränsad av diskprestanda
+- **HTTP listener**: Begränsad till HttpListener-kapacitet
+- **GUI-prestanda**: WinForms-begränsningar för stora bilder
