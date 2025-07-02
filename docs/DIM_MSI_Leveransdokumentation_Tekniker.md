@@ -87,7 +87,6 @@ DIM levereras som en Windows Installer-fil (`.msi`) med namnet `DIM_X_X_X_X.msi`
 
 **🎯 Installationsstrategi för olika scenarier:**
 - **Lokal installation:** Installera båda komponenter på samma maskin (standard)
-- **Centraliserad arkitektur:** DIMService på server, DIM-klient på arbetsstationer
 - **Endast backend:** Bara DIMService för automatiserade system utan GUI
 - **Endast frontend:** Bara DIM-klient som ansluter till extern DIMService
 
