@@ -1,5 +1,5 @@
-# DIM - Leveransdokumentation för MSI-Installation
-## Digital InformationsMarkering - Teknikerguide
+# DIM - Leveransdokumentation för MSI-installation
+## Digital informationsmarkering - Teknikerguide
 
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%20Windows%2011-blue)
 ![Architecture](https://img.shields.io/badge/architecture-x64-green)
@@ -285,9 +285,9 @@ msiexec /i DIM_1_0_0_354.msi /qn ADDLOCAL=ALL /L*V dim_full_install.log
 
 ---
 
-## 6. Installationsalternativ och Features
+## 6. Installationsalternativ och features
 
-### 6.1 Tillgängliga Features
+### 6.1 Tillgängliga features
 
 DIM MSI-paketet är uppbyggt med modulära features som gör det möjligt att installera endast de komponenter som behövs för olika scenarier. Detta möjliggör flexibel deployment i olika miljöer.
 
@@ -715,7 +715,7 @@ msiexec /i DIM_1_0_1_400.msi /qb /L*V upgrade.log
 
 ### 10.2 Avinstallationsmetoder
 
-#### Via Kontrollpanelen
+#### Via kontrollpanelen
 1. **Öppna:** Inställningar > Appar > Installerade appar
 2. **Sök efter:** "DIM"
 3. **Klicka:** Tre punkter > Avinstallera
