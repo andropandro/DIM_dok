@@ -23,6 +23,9 @@ Denna README är **riktat till tekniker** som ansvarar för:
 
 **Observera:** Detta dokument innehåller **inte** utvecklarorienterad information som kodflöden, API-detaljer eller programmeringsspecifikationer.
 
+> **💡 Behöver du djupare teknisk information?**  
+> För avancerad konfigurationshantering och detaljerad MSI-installationsinformation, se avsnittet [Utökad Teknisk Dokumentation](#utökad-teknisk-dokumentation) längre ner i detta dokument.
+
 ---
 
 ## Systemkomponenter
@@ -52,7 +55,7 @@ DIM består av två huvudkomponenter som levereras tillsammans i ett MSI-install
 
 ---
 
-## Installation och Systemkrav
+## Installation och systemkrav
 
 ### Systemkrav
 - **Operativsystem:** Windows 10 eller Windows 11 (x64)
@@ -74,7 +77,7 @@ Exempel: `DIM_1_0_0_354.msi`
 
 ---
 
-## Konfiguration och Drift
+## Konfiguration och drift
 
 ### Konfigurationsfiler
 Alla konfigurationsfiler placeras i: `C:\ProgramData\DIM\Config\`
@@ -126,7 +129,7 @@ DIMService kan hanteras via Windows Tjänster:
 
 ## Avinstallation
 
-### Via Kontrollpanelen
+### Via kontrollpanelen
 1. Öppna "Program och funktioner" i Kontrollpanelen
 2. Hitta "DIM" i listan
 3. Högerklicka och välj "Avinstallera"
@@ -144,7 +147,7 @@ Efter avinstallation kan följande kataloger rensas manuellt:
 
 ---
 
-## Utökad Teknisk Dokumentation
+## Utökad teknisk dokumentation
 
 För djupgående information om specifika tekniska aspekter, se följande dokument:
 
@@ -165,7 +168,7 @@ För djupgående information om specifika tekniska aspekter, se följande dokume
 - Felsöka konfigurationsrelaterade problem
 - Förstå hur systemets inställningar fungerar
 
-### 🚀 MSI-Installation och Leverans
+### 🚀 MSI-installation och leverans
 **Dokument:** [`docs/DIM_MSI_Leveransdokumentation_Tekniker.md`](docs/DIM_MSI_Leveransdokumentation_Tekniker.md)
 
 **Innehåll:**
@@ -185,7 +188,7 @@ För djupgående information om specifika tekniska aspekter, se följande dokume
 
 ---
 
-## Support och Kontakt
+## Support och kontakt
 
 För teknisk support och frågor relaterade till DIM-systemet:
 
