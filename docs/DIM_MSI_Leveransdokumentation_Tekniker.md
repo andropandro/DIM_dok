@@ -1,6 +1,13 @@
 # DIM - Leveransdokumentation för MSI-Installation
 ## Digital InformationsMarkering - Tekniker Guide
 
+![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%20Windows%2011-blue)
+![Architecture](https://img.shields.io/badge/architecture-x64-green)
+![.NET](https://img.shields.io/badge/.NET-8.0-purple)
+![MSI](https://img.shields.io/badge/installer-MSI-orange)
+![License](https://img.shields.io/badge/license-Proprietary-red)
+![Developer](https://img.shields.io/badge/developer-Dynalab%20AB-lightblue)
+
 ### Dokumentversion
 - **Version:** 1.0
 - **Datum:** 2024-12-19
@@ -16,6 +23,56 @@ DIM (Digital InformationsMarkering) är ett system för att skapa och applicera 
 
 ### 1.2 Leveransformat
 DIM levereras som en Windows Installer-fil (`.msi`) med namnet `DIM_X_X_X_X.msi` där X_X_X_X representerar versionsnumret (t.ex. `DIM_1_0_0_123.msi`).
+
+### 1.3 Systemöversikt
+
+```mermaid
+graph TB
+    MSI["DIM_1_0_0_123.msi<br/>MSI Package"]
+    
+    subgraph "Installation Features"
+        SF["DIMServiceFeature<br/>Windows Service"]
+        CF["DIMClientFeature<br/>Client Application"]
+    end
+    
+    subgraph "C:\Program Files\DIM"
+        DS["DIMService.exe<br/>Port 5001<br/>NT AUTHORITY\NetworkService"]
+        DC["DIM.exe<br/>GUI Application"]
+    end
+    
+    subgraph "C:\ProgramData\DIM"
+        CONFIG["Config\<br/>config DIMService.json<br/>config DIM.json"]
+        LOGS["Logs\<br/>Application Logs"]
+        TEMP["Temp\<br/>Document Preview Files"]
+    end
+    
+    subgraph "User Interface"
+        DESKTOP["Desktop Shortcut"]
+        STARTMENU["Start Menu"]
+    end
+    
+    MSI --> SF
+    MSI --> CF
+    SF --> DS
+    CF --> DC
+    SF --> CONFIG
+    CF --> CONFIG
+    CF --> DESKTOP
+    CF --> STARTMENU
+    DS --> LOGS
+    DS --> TEMP
+    DC -.->|HTTP :5001| DS
+    
+    classDef service fill:#e1f5fe
+    classDef client fill:#f3e5f5
+    classDef config fill:#fff3e0
+    classDef ui fill:#e8f5e8
+    
+    class DS service
+    class DC client
+    class CONFIG,LOGS,TEMP config
+    class DESKTOP,STARTMENU ui
+```
 
 ---
 
@@ -104,12 +161,98 @@ C:\ProgramData\DIM\
 
 ## 5. Installationsförfaranden
 
-### 5.1 Behörigheter för installation
+### 5.1 Installationsflöde
+
+```mermaid
+flowchart TD
+    START([Start Installation])
+    CHECK{Administrator<br/>Rights?}
+    UAC[UAC Prompt]
+    METHOD{Installation<br/>Method?}
+    
+    GUI[Grafisk Installation<br/>Dubbelklick MSI]
+    CMD[Kommandorad<br/>msiexec]
+    
+    SILENT{Silent<br/>Installation?}
+    UI_TYPE{UI Level?}
+    
+    FULL_UI[Full UI<br/>/qf]
+    BASIC_UI[Basic UI<br/>/qb]
+    NO_UI[Silent<br/>/qn]
+    
+    FEATURES{Select<br/>Features?}
+    
+    ALL[Install All<br/>ADDLOCAL=ALL]
+    SERVICE[Service Only<br/>ADDLOCAL=DIMServiceFeature]
+    CLIENT[Client Only<br/>ADDLOCAL=DIMClientFeature]
+    
+    INSTALL[MSI Installation]
+    
+    SERVICE_START[Start DIMService]
+    CREATE_SHORTCUTS[Create Shortcuts]
+    COPY_CONFIG[Copy Config Files]
+    
+    VERIFY[Post-Installation<br/>Verification]
+    SUCCESS([Installation Complete])
+    ERROR([Installation Failed<br/>Check Logs])
+    
+    START --> CHECK
+    CHECK -->|No| UAC
+    CHECK -->|Yes| METHOD
+    UAC --> METHOD
+    
+    METHOD -->|GUI| GUI
+    METHOD -->|Command Line| CMD
+    
+    GUI --> FEATURES
+    CMD --> SILENT
+    
+    SILENT -->|No| UI_TYPE
+    SILENT -->|Yes| NO_UI
+    
+    UI_TYPE --> FULL_UI
+    UI_TYPE --> BASIC_UI
+    
+    FULL_UI --> FEATURES
+    BASIC_UI --> FEATURES
+    NO_UI --> FEATURES
+    
+    FEATURES --> ALL
+    FEATURES --> SERVICE
+    FEATURES --> CLIENT
+    
+    ALL --> INSTALL
+    SERVICE --> INSTALL
+    CLIENT --> INSTALL
+    
+    INSTALL --> SERVICE_START
+    INSTALL --> CREATE_SHORTCUTS
+    INSTALL --> COPY_CONFIG
+    
+    SERVICE_START --> VERIFY
+    CREATE_SHORTCUTS --> VERIFY
+    COPY_CONFIG --> VERIFY
+    
+    VERIFY -->|Success| SUCCESS
+    VERIFY -->|Failed| ERROR
+    
+    classDef decision fill:#fff2cc
+    classDef process fill:#d5e8d4
+    classDef terminal fill:#f8cecc
+    classDef start fill:#e1d5e7
+    
+    class CHECK,METHOD,SILENT,UI_TYPE,FEATURES decision
+    class UAC,GUI,CMD,FULL_UI,BASIC_UI,NO_UI,ALL,SERVICE,CLIENT,INSTALL,SERVICE_START,CREATE_SHORTCUTS,COPY_CONFIG,VERIFY process
+    class ERROR,SUCCESS terminal
+    class START start
+```
+
+### 5.2 Behörigheter för installation
 - **Krävs:** Administratörsbehörighet (UAC-prompt visas)
 - **Orsak:** Installation av Windows-tjänst och systemfilkatalogerna
 - **Rekommendation:** Kör installation från ett administratörskonto
 
-### 5.2 Enkel installation (rekommenderat för de flesta)
+### 5.3 Enkel installation (rekommenderat för de flesta)
 
 #### Grafisk installation
 1. **Högerklicka** på MSI-filen och välj **"Kör som administratör"**
@@ -121,7 +264,7 @@ C:\ProgramData\DIM\
 msiexec /i DIM_1_0_0_123.msi /qb
 ```
 
-### 5.3 Tysta installationer (för automatisering)
+### 5.4 Tysta installationer (för automatisering)
 
 #### Helt tyst installation av alla komponenter
 ```cmd
@@ -210,7 +353,61 @@ netsh advfirewall firewall add rule name="DIMService" dir=in action=allow protoc
 
 ## 8. Konfiguration
 
-### 8.1 DIMService-konfiguration
+### 8.1 Nätverkskommunikation
+
+```mermaid
+graph LR
+    subgraph "Local Machine"
+        subgraph "User Space"
+            USER[User]
+            CLIENT[DIM.exe<br/>Klient Application]
+        end
+        
+        subgraph "Service Space"
+            SERVICE[DIMService.exe<br/>Windows Service<br/>NT AUTHORITY\NetworkService]
+        end
+        
+        subgraph "File System"
+            CONFIG_CLIENT[config DIM.json<br/>ServiceURL: localhost<br/>Lyssnarport: 5001]
+            CONFIG_SERVICE[config DIMService.json<br/>Lyssnarport: 5001<br/>Format: emf,png,svg]
+            LOGS[Application Logs]
+        end
+        
+        subgraph "Network"
+            PORT[Port 5001<br/>TCP/HTTP]
+        end
+    end
+    
+    subgraph "External"
+        FIREWALL[Windows Firewall]
+        DOCS[Document Files]
+    end
+    
+    USER -->|Starts| CLIENT
+    CLIENT -->|HTTP Requests| PORT
+    PORT -->|Listens on| SERVICE
+    SERVICE -->|Reads| CONFIG_SERVICE
+    CLIENT -->|Reads| CONFIG_CLIENT
+    SERVICE -->|Writes| LOGS
+    SERVICE -->|Processes| DOCS
+    FIREWALL -.->|May Block| PORT
+    
+    classDef user fill:#e8f5e8
+    classDef app fill:#f3e5f5
+    classDef service fill:#e1f5fe
+    classDef config fill:#fff3e0
+    classDef network fill:#ffebee
+    classDef external fill:#f5f5f5
+    
+    class USER user
+    class CLIENT app
+    class SERVICE service
+    class CONFIG_CLIENT,CONFIG_SERVICE,LOGS config
+    class PORT network
+    class FIREWALL,DOCS external
+```
+
+### 8.2 DIMService-konfiguration
 **Fil:** `C:\ProgramData\DIM\Config\config DIMService.json`
 
 **Viktiga inställningar:**
@@ -218,14 +415,14 @@ netsh advfirewall firewall add rule name="DIMService" dir=in action=allow protoc
 - `Sekretess`: Definierade säkerhetsklassificeringar och paragrafer
 - `Format`: Tillgängliga utdataformat (emf, png, svg)
 
-### 8.2 DIM-klientkonfiguration
+### 8.3 DIM-klientkonfiguration
 **Fil:** `C:\ProgramData\DIM\Config\config DIM.json`
 
 **Viktiga inställningar:**
 - `Lyssnarport`: Port för kommunikation med DIMService (måste matcha tjänsten)
 - `ServiceURL`: Serveradress för DIMService (standard: "localhost")
 
-### 8.3 Redigering av konfigurationsfiler
+### 8.4 Redigering av konfigurationsfiler
 ⚠️ **VIKTIGT:** Starta om DIMService-tjänsten efter konfigurationsändringar:
 
 ```cmd
@@ -409,9 +606,8 @@ curl http://localhost:5001/health
 - Eventuell anpassad konfiguration eller mallar
 
 ### 13.3 Kontaktinformation
-- **Utvecklare:** Dynalab AB
-- **Support:** [Specifiera supportkanaler]
-- **Dokumentation:** Se projektets README och docs-mapp för teknisk dokumentation
+- **Utvecklare:** Dynalab AB  www.dynalab.se
+- **Support:** joakim.sjodin@dynalab.se
 
 ---
 
