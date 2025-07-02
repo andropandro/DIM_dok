@@ -14,6 +14,21 @@
 - **Målgrupp:** Tekniker och systemadministratörer
 - **Syfte:** Konfigurationshantering för DIM-systemet
 
+## Innehållsförteckning
+
+- [1. Översikt](#1-översikt)
+- [2. Konfigurationsfilernas placering](#2-konfigurationsfilernas-placering)
+- [3. DIMService konfigurationsfil](#3-dimservice-konfigurationsfil)
+- [4. DIM klient konfigurationsfil](#4-dim-klient-konfigurationsfil)
+- [5. HTTP API för konfigurationsaccess](#5-http-api-för-konfigurationsaccess)
+- [6. Konfigurationshantering](#6-konfigurationshantering)
+- [7. Ändringshantering](#7-ändringshantering)
+- [8. Troubleshooting och diagnostik](#8-troubleshooting-och-diagnostik)
+- [9. Prestanda och optimering](#9-prestanda-och-optimering)
+- [10. Säkerhet och compliance](#10-säkerhet-och-compliance)
+- [11. Support och underhåll](#11-support-och-underhåll)
+- [12. Support och vidare läsning](#12-support-och-vidare-läsning)
+
 ---
 
 ## 1. Översikt
