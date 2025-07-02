@@ -1,5 +1,5 @@
 # DIM - Leveransdokumentation för MSI-Installation
-## Digital InformationsMarkering - Tekniker Guide
+## Digital InformationsMarkering - Teknikerguide
 
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%20Windows%2011-blue)
 ![Architecture](https://img.shields.io/badge/architecture-x64-green)
@@ -289,11 +289,255 @@ msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=ALL /L*V dim_full_install.log
 
 ### 6.1 Tillgängliga Features
 
-| Feature | Beskrivning | Komponenter |
-|---------|-------------|-------------|
-| `DIMServiceFeature` | Windows-tjänst | DIMService.exe + konfiguration |
-| `DIMClientFeature` | Klientapplikation | DIM.exe + genvägar |
-| `ALL` | Fullständig installation | Alla komponenter |
+DIM MSI-paketet är uppbyggt med modulära features som gör det möjligt att installera endast de komponenter som behövs för olika scenarier. Detta möjliggör flexibel deployment i olika miljöer.
+
+#### 6.1.1 Feature-översikt
+
+```mermaid
+graph TB
+    subgraph "DIM MSI Package"
+        MSI[DIM_1_0_0_123.msi]
+    end
+    
+    subgraph "Tillgängliga Features"
+        ALL[ALL<br/>Fullständig installation]
+        SERVICE[DIMServiceFeature<br/>Windows-tjänst]
+        CLIENT[DIMClientFeature<br/>Klientapplikation]
+    end
+    
+    subgraph "Installerade Komponenter"
+        subgraph "Server Components"
+            DIMSERVICE[DIMService.exe<br/>Windows Service]
+            SERVICE_CONFIG[config DIMService.json<br/>Tjänstkonfiguration]
+            SERVICE_LIBS[.NET 8.0 bibliotek<br/>Tjänstberoenden]
+        end
+        
+        subgraph "Client Components"
+            DIMCLIENT[DIM.exe<br/>GUI Application]
+            CLIENT_CONFIG[config DIM.json<br/>Klientkonfiguration]
+            CLIENT_LIBS[.NET 8.0 bibliotek<br/>Klientberoenden]
+            SHORTCUTS[Genvägar<br/>Skrivbord + Startmeny]
+        end
+        
+        subgraph "Shared Components"
+            SHARED_CONFIG[C:\ProgramData\DIM\Config\<br/>Konfigurationsmapp]
+            SHARED_LOGS[C:\ProgramData\DIM\Logs\<br/>Loggmapp]
+            SHARED_TEMP[C:\ProgramData\DIM\Temp\<br/>Temporära filer]
+        end
+    end
+    
+    MSI --> ALL
+    MSI --> SERVICE
+    MSI --> CLIENT
+    
+    ALL --> SERVICE
+    ALL --> CLIENT
+    
+    SERVICE --> DIMSERVICE
+    SERVICE --> SERVICE_CONFIG
+    SERVICE --> SERVICE_LIBS
+    SERVICE --> SHARED_CONFIG
+    SERVICE --> SHARED_LOGS
+    SERVICE --> SHARED_TEMP
+    
+    CLIENT --> DIMCLIENT
+    CLIENT --> CLIENT_CONFIG
+    CLIENT --> CLIENT_LIBS
+    CLIENT --> SHORTCUTS
+    CLIENT --> SHARED_CONFIG
+    
+    classDef feature fill:#fff2cc
+    classDef server fill:#e1f5fe
+    classDef client fill:#f3e5f5
+    classDef shared fill:#fff3e0
+    
+    class ALL,SERVICE,CLIENT feature
+    class DIMSERVICE,SERVICE_CONFIG,SERVICE_LIBS server
+    class DIMCLIENT,CLIENT_CONFIG,CLIENT_LIBS,SHORTCUTS client
+    class SHARED_CONFIG,SHARED_LOGS,SHARED_TEMP shared
+```
+
+#### 6.1.2 Feature-specifikationer
+
+| Feature | Beskrivning | Komponenter | Användningsscenario |
+|---------|-------------|-------------|-------------------|
+| **`DIMServiceFeature`** | Backend Windows-tjänst | DIMService.exe, konfiguration, tjänstregistrering | Servermiljöer, headless installation |
+| **`DIMClientFeature`** | Frontend GUI-applikation | DIM.exe, genvägar, klientkonfiguration | Användarworkstations, desktop-miljöer |
+| **`ALL`** | Komplett systeminstallation | Alla ovanstående komponenter | Fristående arbetsstationer, fullständig setup |
+
+#### 6.1.3 DIMServiceFeature - Windows-tjänst
+
+**Vad installeras:**
+- `C:\Program Files\DIM\DIMService\DIMService.exe` - Huvudtjänsten
+- `C:\Program Files\DIM\DIMService\*.dll` - .NET 8.0 bibliotek och beroenden
+- `C:\Program Files\DIM\DIMService\*.json` - Tjänstens inbäddade konfiguration
+- `C:\ProgramData\DIM\Config\config DIMService.json` - Huvudkonfigurationsfil
+- `C:\ProgramData\DIM\Logs\` - Loggkatalog
+- `C:\ProgramData\DIM\Temp\` - Temporära filer för dokumentprocessning
+
+**Tjänsteregistrering:**
+- **Tjänstenamn:** `DIMService`
+- **Visningsnamn:** `DIMService`
+- **Beskrivning:** `DIM (Digital Informationsmarkering)`
+- **Startsätt:** Automatisk start vid systemstart
+- **Körkonto:** `NT AUTHORITY\NetworkService`
+- **Beroenden:** Inga externa tjänstberoenden
+
+**Funktionalitet:**
+- HTTP-server på port 5001 (konfigurerbar)
+- REST API för dokumentmarkering
+- Stöd för EMF, PNG och SVG-format
+- Sekretessklassificering enligt svensk lagstiftning
+- Loggning av alla operationer
+
+**Kommandoradsexempel:**
+```cmd
+# Installera endast Windows-tjänsten
+msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMServiceFeature
+
+# Tyst installation med loggning
+msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=DIMServiceFeature /L*V service_install.log
+
+# Installation med anpassad port (kräver manuell konfiguration efter installation)
+msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMServiceFeature
+# Sedan redigera C:\ProgramData\DIM\Config\config DIMService.json
+```
+
+**Användningsscenarier:**
+- **Serverinstallationer:** Centrala servrar som endast tillhandahåller markerings-API
+- **Headless miljöer:** System utan grafiska användargränssnitt
+- **Docker/containerisering:** Minimal installation för containeriserade miljöer
+- **Load balancing:** Flera tjänstinstanser bakom en load balancer
+
+#### 6.1.4 DIMClientFeature - Klientapplikation
+
+**Vad installeras:**
+- `C:\Program Files\DIM\DIM\DIM.exe` - GUI-applikation
+- `C:\Program Files\DIM\DIM\*.dll` - .NET 8.0 bibliotek och beroenden
+- `C:\Program Files\DIM\DIM\*.json` - Applikationsinställningar
+- `C:\ProgramData\DIM\Config\config DIM.json` - Klientkonfigurationsfil
+- Skrivbordsgenväg: `DIM.lnk`
+- Startmenygenväg: `%ProgramData%\Microsoft\Windows\Start Menu\Programs\DIM\DIM.lnk`
+
+**Funktionalitet:**
+- Grafiskt användargränssnitt för dokumentmarkering
+- Anslutning till DIMService via HTTP
+- Förhandsgranskning av markeringar
+- Export till olika filformat
+- Konfiguration av standardvärden
+
+**Kommandoradsexempel:**
+```cmd
+# Installera endast klientapplikationen
+msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMClientFeature
+
+# Tyst installation utan genvägar (avancerat)
+msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=DIMClientFeature
+
+# Installation för fjärrserver-anslutning
+msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMClientFeature
+# Sedan redigera C:\ProgramData\DIM\Config\config DIM.json:
+# {"Lyssnarport": 5001, "ServiceURL": "dimserver.company.local"}
+```
+
+**Användningsscenarier:**
+- **Användarworkstations:** Desktop-datorer där användare skapar markeringar
+- **Administrativa klienter:** Specialiserade arbetsstationer för dokumenthantering
+- **Fjärrklienter:** Klienter som ansluter till central DIMService
+- **Testmiljöer:** Utvecklings- och testinstallationer
+
+#### 6.1.5 ALL - Fullständig installation
+
+**Vad installeras:**
+- Alla komponenter från både `DIMServiceFeature` och `DIMClientFeature`
+- Komplett, fristående DIM-system på en maskin
+
+**Kommandoradsexempel:**
+```cmd
+# Fullständig installation (standard)
+msiexec /i DIM_1_0_0_123.msi /qb
+
+# Explicit full installation
+msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=ALL
+
+# Tyst full installation med detaljerad loggning
+msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=ALL /L*V full_install.log
+```
+
+**Användningsscenarier:**
+- **Fristående arbetsstationer:** Kompletta system där användare både skapar och processar markeringar
+- **Utvecklingsmiljöer:** Fullständig installation för utveckling och testning
+- **Mindre organisationer:** Enkla installationer där allt körs på samma maskin
+- **Pilot-implementationer:** Testa hela systemet innan större deployment
+
+#### 6.1.6 Praktiska kombinationer och exempel
+
+##### Scenario 1: Centraliserad arkitektur
+```cmd
+# På servern (endast tjänst)
+msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=DIMServiceFeature /L*V server.log
+
+# På klientdatorer (endast klient)
+msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=DIMClientFeature /L*V client.log
+# Konfigurera klienter att peka på servern:
+# ServiceURL: "dimserver.company.local"
+```
+
+##### Scenario 2: Fristående installationer
+```cmd
+# Fullständig installation på varje maskin
+msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=ALL
+```
+
+##### Scenario 3: Gradvis utbyggnad
+```cmd
+# Steg 1: Installera tjänst först
+msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMServiceFeature
+
+# Steg 2: Lägg till klient senare (utan avinstallation)
+msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMClientFeature
+# Observera: Detta kommer att lägga till klientfunktionalitet till befintlig installation
+```
+
+#### 6.1.7 Feature-beroenden och begränsningar
+
+**Beroendeanalys:**
+- `DIMClientFeature` **kan** fungera utan `DIMServiceFeature` (om den ansluter till fjärrserver)
+- `DIMServiceFeature` fungerar **oberoende** av `DIMClientFeature`
+- Båda features kan installeras **samtidigt** utan konflikter
+- Shared components (`C:\ProgramData\DIM\`) skapas av **båda** features
+
+**Konfigurationsberoenden:**
+```mermaid
+graph LR
+    subgraph "DIMClientFeature"
+        CLIENT_CONFIG[config DIM.json<br/>Lyssnarport: 5001<br/>ServiceURL: localhost]
+    end
+    
+    subgraph "DIMServiceFeature"  
+        SERVICE_CONFIG[config DIMService.json<br/>Lyssnarport: 5001]
+    end
+    
+    subgraph "Network Communication"
+        HTTP[HTTP Port 5001<br/>localhost eller remote]
+    end
+    
+    CLIENT_CONFIG -.->|Must Match| SERVICE_CONFIG
+    CLIENT_CONFIG -->|Connects via| HTTP
+    SERVICE_CONFIG -->|Listens on| HTTP
+    
+    classDef config fill:#fff3e0
+    classDef network fill:#ffebee
+    
+    class CLIENT_CONFIG,SERVICE_CONFIG config
+    class HTTP network
+```
+
+**Viktiga överväganden:**
+- **Portkonflikt:** Båda features använder samma standardport (5001)
+- **Nätverkskrav:** Klient måste kunna nå tjänsten via HTTP
+- **Säkerhet:** Windows Firewall kan blockera kommunikation
+- **Versionskompatibilitet:** Klient och tjänst bör ha samma version för optimal kompatibilitet
 
 ### 6.2 UI-nivåer för installation
 
