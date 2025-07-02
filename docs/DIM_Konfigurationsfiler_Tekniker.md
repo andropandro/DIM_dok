@@ -10,7 +10,7 @@
 
 ### Dokumentversion
 - **Version:** 1.0
-- **Datum:** 2024-12-19
+- **Datum:** 2025-07-02
 - **Målgrupp:** Tekniker och systemadministratörer
 - **Syfte:** Konfigurationshantering för DIM-systemet
 
@@ -1271,8 +1271,6 @@ git commit -m "Uppdaterad lyssnarport till 8080"
 ## 12. Versionshistorik
 | Version | Datum | Förändringar |
 |---------|--------|--------------|
-| 1.0 | 2024-12-19 | Initial version av konfigurationsdokumentation |
+| 1.0 | 2025-07-02 | Initial version av konfigurationsdokumentation |
 
----
-
-*Detta dokument täcker fullständig konfigurationshantering för DIM-systemet riktat till tekniker och systemadministratörer. För utvecklardokumentation och kodspecifikationer, se projektets tekniska dokumentation.* 
+ 
