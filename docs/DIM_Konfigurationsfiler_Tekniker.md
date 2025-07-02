@@ -19,13 +19,69 @@
 ## 1. Översikt
 
 ### 1.1 Varför finns konfigurationsfilerna?
-Konfigurationsfilerna är hjärtat i DIM-systemet och fyller flera kritiska funktioner:
 
-- **Flexibilitet:** Möjliggör anpassning av systemet till olika organisationers behov
-- **Säkerhet:** Definierar säkerhetsklassificeringar och regelefterlevnad
-- **Skalbarhet:** Tillåter enkla ändringar utan kodmodifikationer
-- **Standardisering:** Säkerställer konsekvent hantering av informationsmarkeringar
-- **Compliance:** Stöder juridiska krav för dokumentklassificering
+**För dig som tekniker:** Konfigurationsfilerna är **hjärtat i DIM-systemets funktion**. De bestämmer inte bara hur systemet fungerar, utan även om det fungerar överhuvudtaget. Utan korrekt konfiguration startar varken DIMService eller DIM-klienten.
+
+#### Varför inte hårdkoda inställningarna i programkoden?
+
+Föreställ dig om alla inställningar var inbyggda i programkoden - varje gång du behövde ändra organisationsnamn, lägga till en ny säkerhetsklassificering eller byta port skulle det kräva omkompilering och ny programversion. Konfigurationsfilerna löser detta genom att separera **inställningar** från **funktionalitet**.
+
+#### Kritiska funktioner som konfigurationsfilerna fyller:
+
+**🔧 Flexibilitet - Anpassning till organisationen**
+- **Vad det innebär:** Olika myndigheter har olika organisationsnamn, logotyper och säkerhetsklassificeringar
+- **Praktiskt exempel:** Polismyndigheten behöver andra säkerhetsmarkeringar än Försvarsmakten
+- **Som tekniker:** Du kan anpassa systemet för nya organisationer utan att involvera utvecklare
+- **Utan konfiguration:** Ett system kunde bara användas av en specifik organisation
+
+**🔒 Säkerhet - Regelefterlevnad och klassificering**
+- **Vad det innebär:** Säkerhetsklassificeringar (Hemlig, SK, etc.) och paragrafkopplingar definieras i konfigurationen
+- **Praktiskt exempel:** När OSL-lagstiftningen ändras kan du uppdatera paragrafkopplingar utan systemomstart
+- **Som tekniker:** Du ansvarar för att säkerhetsklassificeringarna följer aktuell lagstiftning
+- **Utan konfiguration:** Säkerhetsklassificeringar skulle vara statiska och snabbt föråldrade
+
+**📈 Skalbarhet - Ändringar utan kodmodifikationer**
+- **Vad det innebär:** Systemet kan växa och anpassas utan att kräva nya programversioner
+- **Praktiskt exempel:** Lägg till nya bildformat, ändra standardstorlekar, konfigurera för fjärrservrar
+- **Som tekniker:** Du kan göra förändringar direkt i produktionsmiljön (med försiktighet)
+- **Utan konfiguration:** Varje ändring skulle kräva utvecklarresurser och deployment
+
+**📋 Standardisering - Konsekvent beteende**
+- **Vad det innebär:** Alla användare får samma standardinställningar och beteenden
+- **Praktiskt exempel:** Alla stämplar får samma storlek, färg och format inom organisationen
+- **Som tekniker:** Du säkerställer att alla instanser av systemet fungerar identiskt
+- **Utan konfiguration:** Olika användare kunde få olika beteenden beroende på installation
+
+**⚖️ Compliance - Juridisk efterlevnad**
+- **Vad det innebär:** Systemet måste följa svenska offentlighets- och sekretesslagen (OSL)
+- **Praktiskt exempel:** Korrekta paragrafkopplingar, rätt formuleringar, godkända klassificeringar
+- **Som tekniker:** Du ansvarar för att systemet uppfyller juridiska krav
+- **Utan konfiguration:** Lagändringar skulle göra systemet obrukbart tills ny version utvecklas
+
+#### Konsekvenser av felaktig konfiguration
+
+**🚨 Vad händer när konfigurationen är fel:**
+- **DIMService startar inte** → Ingen backend-funktionalitet
+- **DIM-klient kan inte ansluta** → Användare ser felmeddelanden
+- **Felaktiga säkerhetsklassificeringar** → Juridiska problem
+- **Fel portkonfiguration** → Kommunikationsproblem mellan komponenter
+
+**✅ Vad framgångsrik konfiguration ger:**
+- **Smidig systemstart** utan manuella ingrepp
+- **Korrekt säkerhetsklassificering** enligt gällande lag
+- **Anpassad organisationsinformation** i alla stämplar
+- **Flexibilitet för framtida ändringar** utan systemuppgraderingar
+
+#### Din roll som tekniker
+
+Som tekniker är du **konfigurationsansvarig** vilket innebär:
+- **Förstå** vad varje konfigurationsparameter gör
+- **Validera** ändringar innan de implementeras i produktion
+- **Övervaka** systemets beteende efter konfigurationsändringar
+- **Dokumentera** alla ändringar för spårbarhet
+- **Ha beredskap** för snabb återställning vid problem
+
+**Viktigt att komma ihåg:** Konfigurationsfilerna är inte bara "inställningsfiler" - de är **kritiska systemkomponenter** som direkt påverkar DIM-systemets funktion och juridiska efterlevnad.
 
 ### 1.2 Konfigurationsfiernas arkitektur
 
