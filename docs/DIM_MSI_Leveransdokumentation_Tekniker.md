@@ -1,5 +1,5 @@
 # DIM - Leveransdokumentation för MSI-installation
-## Digital informationsmarkering - Teknikerguide
+## Digital Informationsmarkering - Teknikerguide
 
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%20Windows%2011-blue)
 ![Architecture](https://img.shields.io/badge/architecture-x64-green)
