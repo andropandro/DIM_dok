@@ -14,6 +14,23 @@
 - **Målgrupp:** Tekniker och systemadministratörer
 - **Syfte:** Installation, konfiguration och hantering av DIM MSI-paket
 
+## Innehållsförteckning
+
+- [1. Översikt](#1-översikt)
+- [2. Systemkomponenter](#2-systemkomponenter)
+- [3. Systemkrav](#3-systemkrav)
+- [4. Installationsplatser och katalogstruktur](#4-installationsplatser-och-katalogstruktur)
+- [5. Installationsförfaranden](#5-installationsförfaranden)
+- [6. Installationsalternativ och features](#6-installationsalternativ-och-features)
+- [7. Post-installation](#7-post-installation)
+- [8. Konfiguration](#8-konfiguration)
+- [9. Uppgraderingar](#9-uppgraderingar)
+- [10. Avinstallation](#10-avinstallation)
+- [11. Felsökning](#11-felsökning)
+- [12. Säkerhet och behörigheter](#12-säkerhet-och-behörigheter)
+- [13. Support och underhåll](#13-support-och-underhåll)
+- [14. Support och vidare läsning](#14-support-och-vidare-läsning)
+
 ---
 
 ## 1. Översikt
