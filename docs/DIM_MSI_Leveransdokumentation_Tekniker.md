@@ -10,7 +10,7 @@
 
 ### Dokumentversion
 - **Version:** 1.0
-- **Datum:** 2024-12-19
+- **Datum:** 2025-07-02
 - **Målgrupp:** Tekniker och systemadministratörer
 - **Syfte:** Installation, konfiguration och hantering av DIM MSI-paket
 
@@ -22,13 +22,13 @@
 DIM (Digital InformationsMarkering) är ett system för att skapa och applicera säkerhetsklassificeringar och markeringar på digitala dokument. Systemet består av två huvudkomponenter som levereras i ett sammanhållet MSI-paket.
 
 ### 1.2 Leveransformat
-DIM levereras som en Windows Installer-fil (`.msi`) med namnet `DIM_X_X_X_X.msi` där X_X_X_X representerar versionsnumret (t.ex. `DIM_1_0_0_123.msi`).
+DIM levereras som en Windows Installer-fil (`.msi`) med namnet `DIM_X_X_X_X.msi` där X_X_X_X representerar versionsnumret med understreck (t.ex. `DIM_1_0_0_354.msi`).
 
 ### 1.3 Systemöversikt
 
 ```mermaid
 graph TB
-    MSI["DIM_1_0_0_123.msi<br/>MSI Package"]
+    MSI["DIM_1_0_0_354.msi<br/>MSI Package"]
     
     subgraph "Installation Features"
         SF["DIMServiceFeature<br/>Windows Service"]
@@ -261,26 +261,26 @@ flowchart TD
 
 #### Kommandoradsinstallation med basic UI
 ```cmd
-msiexec /i DIM_1_0_0_123.msi /qb
+msiexec /i DIM_1_0_0_354.msi /qb
 ```
 
 ### 5.4 Tysta installationer (för automatisering)
 
 #### Helt tyst installation av alla komponenter
 ```cmd
-msiexec /i DIM_1_0_0_123.msi /qn /L*V install.log
+msiexec /i DIM_1_0_0_354.msi /qn /L*V install.log
 ```
 
 #### Tyst installation med loggning och specifika komponenter
 ```cmd
 # Endast Windows-tjänsten
-msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=DIMServiceFeature /L*V dimservice_install.log
+msiexec /i DIM_1_0_0_354.msi /qn ADDLOCAL=DIMServiceFeature /L*V dimservice_install.log
 
 # Endast klientapplikationen
-msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=DIMClientFeature /L*V dimclient_install.log
+msiexec /i DIM_1_0_0_354.msi /qn ADDLOCAL=DIMClientFeature /L*V dimclient_install.log
 
 # Alla komponenter
-msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=ALL /L*V dim_full_install.log
+msiexec /i DIM_1_0_0_354.msi /qn ADDLOCAL=ALL /L*V dim_full_install.log
 ```
 
 ---
@@ -296,7 +296,7 @@ DIM MSI-paketet är uppbyggt med modulära features som gör det möjligt att in
 ```mermaid
 graph TB
     subgraph "DIM MSI Package"
-        MSI[DIM_1_0_0_123.msi]
+        MSI[DIM_1_0_0_354.msi]
     end
     
     subgraph "Tillgängliga Features"
@@ -393,13 +393,13 @@ graph TB
 **Kommandoradsexempel:**
 ```cmd
 # Installera endast Windows-tjänsten
-msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMServiceFeature
+msiexec /i DIM_1_0_0_354.msi /qb ADDLOCAL=DIMServiceFeature
 
 # Tyst installation med loggning
-msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=DIMServiceFeature /L*V service_install.log
+msiexec /i DIM_1_0_0_354.msi /qn ADDLOCAL=DIMServiceFeature /L*V service_install.log
 
 # Installation med anpassad port (kräver manuell konfiguration efter installation)
-msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMServiceFeature
+msiexec /i DIM_1_0_0_354.msi /qb ADDLOCAL=DIMServiceFeature
 # Sedan redigera C:\ProgramData\DIM\Config\config DIMService.json
 ```
 
@@ -429,13 +429,13 @@ msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMServiceFeature
 **Kommandoradsexempel:**
 ```cmd
 # Installera endast klientapplikationen
-msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMClientFeature
+msiexec /i DIM_1_0_0_354.msi /qb ADDLOCAL=DIMClientFeature
 
 # Tyst installation utan genvägar (avancerat)
-msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=DIMClientFeature
+msiexec /i DIM_1_0_0_354.msi /qn ADDLOCAL=DIMClientFeature
 
 # Installation för fjärrserver-anslutning
-msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMClientFeature
+msiexec /i DIM_1_0_0_354.msi /qb ADDLOCAL=DIMClientFeature
 # Sedan redigera C:\ProgramData\DIM\Config\config DIM.json:
 # {"Lyssnarport": 5001, "ServiceURL": "dimserver.company.local"}
 ```
@@ -455,13 +455,13 @@ msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMClientFeature
 **Kommandoradsexempel:**
 ```cmd
 # Fullständig installation (standard)
-msiexec /i DIM_1_0_0_123.msi /qb
+msiexec /i DIM_1_0_0_354.msi /qb
 
 # Explicit full installation
-msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=ALL
+msiexec /i DIM_1_0_0_354.msi /qb ADDLOCAL=ALL
 
 # Tyst full installation med detaljerad loggning
-msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=ALL /L*V full_install.log
+msiexec /i DIM_1_0_0_354.msi /qn ADDLOCAL=ALL /L*V full_install.log
 ```
 
 **Användningsscenarier:**
@@ -475,10 +475,10 @@ msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=ALL /L*V full_install.log
 ##### Scenario 1: Centraliserad arkitektur
 ```cmd
 # På servern (endast tjänst)
-msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=DIMServiceFeature /L*V server.log
+msiexec /i DIM_1_0_0_354.msi /qn ADDLOCAL=DIMServiceFeature /L*V server.log
 
 # På klientdatorer (endast klient)
-msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=DIMClientFeature /L*V client.log
+msiexec /i DIM_1_0_0_354.msi /qn ADDLOCAL=DIMClientFeature /L*V client.log
 # Konfigurera klienter att peka på servern:
 # ServiceURL: "dimserver.company.local"
 ```
@@ -486,16 +486,16 @@ msiexec /i DIM_1_0_0_123.msi /qn ADDLOCAL=DIMClientFeature /L*V client.log
 ##### Scenario 2: Fristående installationer
 ```cmd
 # Fullständig installation på varje maskin
-msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=ALL
+msiexec /i DIM_1_0_0_354.msi /qb ADDLOCAL=ALL
 ```
 
 ##### Scenario 3: Gradvis utbyggnad
 ```cmd
 # Steg 1: Installera tjänst först
-msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMServiceFeature
+msiexec /i DIM_1_0_0_354.msi /qb ADDLOCAL=DIMServiceFeature
 
 # Steg 2: Lägg till klient senare (utan avinstallation)
-msiexec /i DIM_1_0_0_123.msi /qb ADDLOCAL=DIMClientFeature
+msiexec /i DIM_1_0_0_354.msi /qb ADDLOCAL=DIMClientFeature
 # Observera: Detta kommer att lägga till klientfunktionalitet till befintlig installation
 ```
 
@@ -555,7 +555,7 @@ graph LR
 /L*V logfil.txt
 
 # Exempel med olika loggningsnivåer
-msiexec /i DIM_1_0_0_123.msi /qb /L*V "C:\Temp\DIM_Installation.log"
+msiexec /i DIM_1_0_0_354.msi /qb /L*V "C:\Temp\DIM_Installation.log"
 ```
 
 **Rekommendation:** Använd alltid loggning vid automatiserade installationer för felsökning.
@@ -688,7 +688,7 @@ net start DIMService
 #### Automatisk uppgradering
 ```cmd
 # Installation av ny version avinstallerar automatiskt föregående version
-msiexec /i DIM_1_0_1_150.msi /qb /L*V upgrade.log
+msiexec /i DIM_1_0_1_400.msi /qb /L*V upgrade.log
 ```
 
 #### Manuell uppgradering
@@ -726,12 +726,12 @@ msiexec /i DIM_1_0_1_150.msi /qb /L*V upgrade.log
 msiexec /x {PRODUCT-GUID} /qb /L*V uninstall.log
 
 # Alternativt, med MSI-filen
-msiexec /x DIM_1_0_0_123.msi /qb /L*V uninstall.log
+msiexec /x DIM_1_0_0_354.msi /qb /L*V uninstall.log
 ```
 
 #### Tyst avinstallation
 ```cmd
-msiexec /x DIM_1_0_0_123.msi /qn /L*V silent_uninstall.log
+msiexec /x DIM_1_0_0_354.msi /qn /L*V silent_uninstall.log
 ```
 
 ### 10.3 Manuell rensning (om behov)
@@ -811,8 +811,8 @@ telnet localhost 5001
 # Kontrollera lyssningsports
 netstat -ano | findstr :5001
 
-# Testa HTTP-anrop (om tjänsten exponerar HTTP)
-curl http://localhost:5001/health
+# Testa HTTP-anrop (kontrollera att tjänsten körs)
+curl http://localhost:5001/isrunning
 ```
 
 ---
@@ -858,8 +858,6 @@ curl http://localhost:5001/health
 ## 14. Versionshistorik
 | Version | Datum | Förändringar |
 |---------|--------|--------------|
-| 1.0 | 2024-12-19 | Initial version av leveransdokumentation |
+| 1.0 | 2025-07-02 | Initial version av leveransdokumentation |
 
----
-
-*Detta dokument täcker installation och hantering av DIM MSI-paket för tekniker och systemadministratörer. För utvecklardokumentation och kodspecifikationer, se projektets tekniska dokumentation.* 
+ 
