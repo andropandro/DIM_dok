@@ -24,15 +24,9 @@
 
 #### Varför inte hårdkoda inställningarna i programkoden?
 
-Föreställ dig om alla inställningar var inbyggda i programkoden - varje gång du behövde ändra organisationsnamn, lägga till en ny säkerhetsklassificering eller byta port skulle det kräva omkompilering och ny programversion. Konfigurationsfilerna löser detta genom att separera **inställningar** från **funktionalitet**.
+Om alla inställningar var inbyggda i programkoden - varje gång du behövde ändra organisationsnamn, lägga till en ny säkerhetsklassificering eller byta port skulle det kräva omkompilering och ny programversion. Konfigurationsfilerna löser detta genom att separera **inställningar** från **funktionalitet**.
 
 #### Kritiska funktioner som konfigurationsfilerna fyller:
-
-**🔧 Flexibilitet - Anpassning till organisationen**
-- **Vad det innebär:** Olika myndigheter har olika organisationsnamn, logotyper och säkerhetsklassificeringar
-- **Praktiskt exempel:** Polismyndigheten behöver andra säkerhetsmarkeringar än Försvarsmakten
-- **Som tekniker:** Du kan anpassa systemet för nya organisationer utan att involvera utvecklare
-- **Utan konfiguration:** Ett system kunde bara användas av en specifik organisation
 
 **🔒 Säkerhet - Regelefterlevnad och klassificering**
 - **Vad det innebär:** Säkerhetsklassificeringar (Hemlig, SK, etc.) och paragrafkopplingar definieras i konfigurationen
