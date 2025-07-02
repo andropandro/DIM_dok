@@ -192,9 +192,7 @@ För djupgående information om specifika tekniska aspekter, se följande dokume
 
 För teknisk support och frågor relaterade till DIM-systemet:
 
-- **Utvecklare:** Dynalab AB
-- **Systemversion:** Se installerad version via DIM-klientens "Om"-dialog
-- **Dokumentversion:** Se respektive dokuments versionsinformation
+- **Utvecklare:** Dynalab AB  www.dynalab.se
 
 **Vid supportärenden, inkludera:**
 - Operativsystemversion
