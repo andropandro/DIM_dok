@@ -193,6 +193,16 @@ graph LR
     "Kod": "Hojd", 
     "Text": "",
     "Varde": 182
+  },
+  {
+    "Kod": "BreddHanvisning",
+    "Text": "",
+    "Varde": 302
+  },
+  {
+    "Kod": "HojdHanvisning",
+    "Text": "",
+    "Varde": 66
   }
 ]
 ```
@@ -259,9 +269,24 @@ graph LR
     "HarSSK": true,
     "Paragrafer": [...],
     "SSK": [...]
+  },
+  {
+    "Kod": "SK",
+    "Text": "SEKRETESS-\r\nKLASSIFICERAD",
+    "HarParagrafer": true,
+    "HarSSK": false,
+    "Paragrafer": [...]
   }
 ]
 ```
+
+**Tillgängliga sekretessklassificeringar:**
+
+| Kod | Klassificering | Har Paragrafer | Har SSK | Användning |
+|-----|---------------|---------------|---------|------------|
+| **Ö** | EJ SEKRETESS | Nej | Nej | Öppen information |
+| **Hemlig** | HEMLIG | Ja | Ja | Säkerhetsskyddsklassad information |
+| **SK** | SEKRETESS-KLASSIFICERAD | Ja | Nej | Sekretessbelagd utan SSK |
 
 ### 3.6 Paragrafer
 
@@ -288,12 +313,12 @@ graph LR
 |-----|----------|-------------|-------------------|
 | `P15K1` | 15 kap. 1 § | Utrikessekretess | Utrikesrelationer, diplomati |
 | `P15K2` | 15 kap. 2 § | Försvarssekretess | Militära frågor, försvar |
-| `P18K8` | 18 kap. 8 § | Säkerhets-/bevakningsåtgärd | Säkerhetsskydd |
+| `P18K8` | 18 kap. 8 § | Säkerhets-eller bevakningsåtgärd | Säkerhetsskydd |
 | `P18K8a` | 18 kap. 8a § | Incidentrapporter | Säkerhetsincidenter |
-| `P18K9` | 18 kap. 9 § | Chiffer, kod m.m. | Kryptografi, kodning |
+| `P18K9` | 18 kap. 9 § | Chiffer kod m.m. | Kryptografi, kodning |
 | `P39K1` | 39 kap. 1 § | Personalsocial verksamhet | Personalfrågor |
-| `P39K2` | 39 kap. 2 § | Personaladministrativ verksamhet | HR-administration |
-| `P39K3` | 39 kap. 3 § | Adresser, telefonnummer | Personuppgifter |
+| `P39K2` | 39 kap. 2 § | Personaladministrativ verksamhet i övrigt | HR-administration |
+| `P39K3` | 39 kap. 3 § | Adresser telefonnummer m.m. | Personuppgifter |
 
 ### 3.7 SSK (Säkerhetsskyddsklass)
 
