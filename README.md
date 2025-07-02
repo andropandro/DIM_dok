@@ -1,6 +1,6 @@
 # DIM - Digital Informationsmarkering
 
-## Översikt för Tekniker
+## Översikt för tekniker
 
 DIM (Digital Informationsmarkering) är ett system för att skapa digitala säkerhetsstämplar för klassificering av dokument enligt svenska offentlighets- och sekretesslagen (OSL). Systemet är utvecklat för att möta svenska myndigheters behov av säker och standardiserad dokumentmarkering.
 
