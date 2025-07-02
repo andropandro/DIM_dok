@@ -186,6 +186,26 @@ För djupgående information om specifika tekniska aspekter, se följande dokume
 - Lösa komplexa installationsproblem
 - Förstå MSI-paketets innehåll och beteende
 
+### 🌐 HTTP API-endpoints
+**Dokument:** [`docs/DIM_HTTP_Endpoints_Tekniker.md`](docs/DIM_HTTP_Endpoints_Tekniker.md)
+
+**Innehåll:**
+- Komplett guide till alla tillgängliga HTTP-endpoints
+- Systemövervakning och diagnostik via API
+- Automatiserade hälsokontroller och övervakningsskript
+- Konfigurationskontroll och valideringstestning
+- Stämpelgenerering via HTTP för integrationstester
+- Felsökning av nätverks- och API-problem
+- Säkerhetsaspekter och bästa praxis för API-användning
+
+**Använd detta dokument när du behöver:**
+- Övervaka systemhälsa och upptäcka problem proaktivt
+- Felsöka HTTP-kommunikation mellan klient och tjänst
+- Automatisera systemkontroller och drift
+- Integrera DIM med andra system
+- Verifiera konfiguration och funktionalitet programmatiskt
+- Skapa egna övervaknings- och diagnostikverktyg
+
 ---
 
 ## Support och kontakt
