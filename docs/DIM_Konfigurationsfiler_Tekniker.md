@@ -1,5 +1,5 @@
-# DIM - Konfigurationsfiler Teknikerguide
-## Digital InformationsMarkering - Konfigurationshantering
+# DIM - Konfigurationsfiler teknikerguide
+## Digital informationsmarkering - Konfigurationshantering
 
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%20Windows%2011-blue)
 ![Config](https://img.shields.io/badge/config-JSON%20Format-green)
@@ -134,7 +134,7 @@ graph LR
 
 ---
 
-## 3. DIMService Konfigurationsfil
+## 3. DIMService konfigurationsfil
 
 ### 3.1 Övergripande struktur
 
@@ -351,7 +351,7 @@ graph LR
 
 ---
 
-## 4. DIM Klient Konfigurationsfil
+## 4. DIM klient konfigurationsfil
 
 ### 4.1 Struktur
 
