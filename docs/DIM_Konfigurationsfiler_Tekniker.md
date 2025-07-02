@@ -1372,16 +1372,28 @@ git add config DIMService.json
 git commit -m "Uppdaterad lyssnarport till 8080"
 ```
 
-### 11.3 Kontaktinformation
-- **Utvecklare:** Dynalab AB - www.dynalab.se
-- **Support:** joakim.sjodin@dynalab.se
-- **Dokumentation:** Se projektets README och docs-mapp för teknisk dokumentation
-
 ---
 
-## 12. Versionshistorik
+## 12. Support och vidare läsning
+
+### Relaterad dokumentation:
+- [`README.md`](../README.md) - Allmän systemöversikt
+- [`docs/DIM_MSI_Leveransdokumentation_Tekniker.md`](DIM_MSI_Leveransdokumentation_Tekniker.md) - Installation och deployment
+- [`docs/DIM_HTTP_Endpoints_Tekniker.md`](DIM_HTTP_Endpoints_Tekniker.md) - HTTP API-endpoints
+
+### Support:
+- **Utvecklare:** Dynalab AB    www.dynalab.se
+- **Systemversion:** Se `/config` endpoint för aktuell konfigurationsstatus
+
+**Vid konfigurationsproblem, inkludera:**
+- Aktuell innehåll i berörda JSON-filer
+- Felmeddelanden från `/fellogg` endpoint
+- DIMService version och tjänststatus
+- Resultat från PowerShell JSON-validering
+
+### Versionshistorik:
 | Version | Datum | Förändringar |
 |---------|--------|--------------|
-| 1.0 | 2025-07-02 | Initial version av konfigurationsdokumentation |
+| 1.0 | 2025-01-02 | Initial version av konfigurationsdokumentation |
 
  
