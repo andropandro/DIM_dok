@@ -1,5 +1,5 @@
-# DIM - Konfigurationsfiler teknikerguide
-## Digital informationsmarkering - Konfigurationshantering
+# DIM - Konfigurationsfiler Teknikerguide
+## Digital Informationsmarkering - Konfigurationshantering
 
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%20Windows%2011-blue)
 ![Config](https://img.shields.io/badge/config-JSON%20Format-green)
