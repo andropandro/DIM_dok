@@ -24,7 +24,7 @@ Denna README är **riktat till tekniker** som ansvarar för:
 **Observera:** Detta dokument innehåller **inte** utvecklarorienterad information som kodflöden, API-detaljer eller programmeringsspecifikationer.
 
 > **💡 Behöver du djupare teknisk information?**  
-> För avancerad konfigurationshantering och detaljerad MSI-installationsinformation, se avsnittet [Utökad Teknisk Dokumentation](#utökad-teknisk-dokumentation) längre ner i detta dokument.
+> För avancerad konfigurationshantering, MSI-installationsinformation och HTTP API-endpoints, se avsnittet [Utökad Teknisk Dokumentation](#utökad-teknisk-dokumentation) längre ner i detta dokument.
 
 ---
 
