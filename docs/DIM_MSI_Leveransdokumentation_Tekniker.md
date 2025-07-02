@@ -971,15 +971,29 @@ curl http://localhost:5001/isrunning
 - `C:\ProgramData\DIM\Config\config DIM.json`
 - Eventuell anpassad konfiguration eller mallar
 
-### 13.3 Kontaktinformation
-- **Utvecklare:** Dynalab AB  www.dynalab.se
-- **Support:** joakim.sjodin@dynalab.se
-
 ---
 
-## 14. Versionshistorik
+## 14. Support och vidare läsning
+
+### Relaterad dokumentation:
+- [`README.md`](../README.md) - Allmän systemöversikt
+- [`docs/DIM_Konfigurationsfiler_Tekniker.md`](DIM_Konfigurationsfiler_Tekniker.md) - Konfigurationshantering
+- [`docs/DIM_HTTP_Endpoints_Tekniker.md`](DIM_HTTP_Endpoints_Tekniker.md) - HTTP API-endpoints
+
+### Support:
+- **Utvecklare:** Dynalab AB    www.dynalab.se
+- **MSI-version:** Kontrollera filnamn eller ProductVersion i installationsloggar
+
+**Vid installationsproblem, inkludera:**
+- MSI-filnamn och version
+- Fullständig installationslogg (`/L*V` output)
+- Windows version och arkitektur (x64/x86)
+- Beskrivning av försök och felmeddelanden
+- Resultat från `msiexec /? ` kommandot
+
+### Versionshistorik:
 | Version | Datum | Förändringar |
 |---------|--------|--------------|
-| 1.0 | 2025-07-02 | Initial version av leveransdokumentation |
+| 1.0 | 2025-01-02 | Initial version av leveransdokumentation |
 
  
