@@ -937,86 +937,7 @@ echo "Rollback genomförd - kontrollera att systemet fungerar"
    curl http://localhost:8080/config
    ```
 
-#### Scenario 2: Lägga till ny säkerhetsklassificering
-
-**Bakgrund:** Organisationen inför ny klassificering enligt SÄKSKYDDSFÖRORDNINGEN.
-
-**Fullständig konfiguration:**
-```json
-{
-  "Sekretess": [
-    {
-      "Kod": "Offentlig",
-      "Text": "OFFENTLIG",
-      "HarParagrafer": false,
-      "HarSSK": false,
-      "Paragrafer": [],
-      "SSK": []
-    },
-    {
-      "Kod": "Begransad",
-      "Text": "BEGRÄNSAD",
-      "HarParagrafer": true,
-      "HarSSK": true,
-      "Paragrafer": [
-        {
-          "Kod": "P21K3",
-          "Text": "21 kap. 3 §",
-          "Beskrivning": "Allmän sekretessparagraf"
-        }
-      ],
-      "SSK": [
-        {
-          "Kod": "K1",
-          "Text": "SKYDDSKLASS 1"
-        }
-      ]
-    },
-    {
-      "Kod": "Kvalificerad",
-      "Text": "KVALIFICERAD SEKRETESS", 
-      "HarParagrafer": true,
-      "HarSSK": true,
-      "Paragrafer": [
-        {
-          "Kod": "P26K1",
-          "Text": "26 kap. 1 §",
-          "Beskrivning": "Ekonomisk information"
-        },
-        {
-          "Kod": "P19K1",
-          "Text": "19 kap. 1 §",
-          "Beskrivning": "Internationella relationer"
-        }
-      ],
-      "SSK": [
-        {
-          "Kod": "K2",
-          "Text": "SKYDDSKLASS 2"
-        },
-        {
-          "Kod": "K3", 
-          "Text": "SKYDDSKLASS 3"
-        }
-      ]
-    }
-  ]
-}
-```
-
-**Validering efter ändring:**
-```cmd
-# Testa att ny klassificering finns tillgänglig
-curl http://localhost:5001/config | findstr "Kvalificerad"
-
-# Kontrollera att paragrafer laddats korrekt
-curl http://localhost:5001/paragrafer
-
-# Kontrollera SSK-klasser
-curl http://localhost:5001/ssk
-```
-
-#### Scenario 3: Ändra standardvärden för organisation
+#### Scenario 2: Ändra standardvärden för organisation
 
 **Bakgrund:** Byte av organisationsnamn eller standardinställningar.
 
@@ -1056,7 +977,7 @@ curl http://localhost:5001/defaultvarden
 start "C:\Program Files\DIM\DIM\DIM.exe"
 ```
 
-#### Scenario 4: Aktivera/inaktivera bildformat
+#### Scenario 3: Aktivera/inaktivera bildformat
 
 **Bakgrund:** Organisationen behöver begränsa eller utöka tillgängliga exportformat.
 
@@ -1090,37 +1011,7 @@ start "C:\Program Files\DIM\DIM\DIM.exe"
 - **PNG:** Bra för webbapplikationer och e-post
 - **SVG:** Endast om målsystemet stöder formatet fullt ut
 
-#### Scenario 5: Nätverkskonfiguration för fjärråtkomst
 
-**Bakgrund:** DIMService behöver nås från andra datorer i nätverket.
-
-**DIMService-konfiguration:**
-```json
-{
-  "Lyssnarport": 5001,
-  "BindAddress": "0.0.0.0"
-}
-```
-
-**Klient-konfiguration på fjärrdatorer:**
-```json
-{
-  "Lyssnarport": 5001,
-  "ServiceURL": "192.168.1.100"
-}
-```
-
-**Säkerhetsinställningar:**
-```cmd
-# Brandvägg på servern
-netsh advfirewall firewall add rule name="DIMService-Remote" dir=in action=allow protocol=TCP localport=5001 remoteip=192.168.1.0/24
-
-# Kontrollera anslutning från fjärrdator
-telnet 192.168.1.100 5001
-
-# Testa API från fjärrdator
-curl http://192.168.1.100:5001/config
-```
 
 ---
 
