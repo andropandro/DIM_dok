@@ -595,7 +595,22 @@ flowchart TD
 
 ## 7. Ändringshantering
 
-### 7.1 När träder ändringar i kraft?
+### 7.1 Konfigurationsläsning och cachning
+
+**DIMService-beteende:**
+- Konfigurationsfilen läses **endast vid tjänstestart**
+- Alla konfigurationsdata **cachas i minnet** under körning
+- **Ingen automatisk omladdning** - hot-reload stöds inte
+- Ändringar kräver **explicit tjänsteomstart** för att träda i kraft
+- Felaktig konfiguration **förhindrar tjänstestart**
+
+**DIM-klientbeteende:**
+- Konfigurationsfilen läses **vid applikationsstart**
+- Minimal konfiguration - endast anslutningsinställningar
+- **Ingen hot-reload** - kräver appomstart
+- Felaktig konfiguration **förhindrar appstart**
+
+### 7.2 När träder ändringar i kraft?
 
 ```mermaid
 graph LR
@@ -626,63 +641,271 @@ graph LR
     class SERVICE_RESTART,CLIENT_RESTART restart
 ```
 
-### 7.2 Säkert ändringsförfarande
+#### Omstartstider och påverkan
 
-#### Steg 1: Backup av befintlig konfiguration
+| Komponent | Genomsnittlig starttid | Påverkan under omstart | Automatisk återstart |
+|-----------|----------------------|----------------------|-------------------|
+| **DIMService** | 3-8 sekunder | API ej tillgängligt | Ja (Windows Service) |
+| **DIM Klient** | 2-5 sekunder | Ej tillgänglig för användare | Nej (manuell start) |
+
+### 7.3 Kritiska vs. icke-kritiska ändringar
+
+#### Kritiska ändringar (kräver omstart)
+**DIMService:**
+- `Lyssnarport` - Ändrar HTTP-server binding
+- `Sekretess` - Nya/ändrade säkerhetsklassificeringar
+- `Format` - Nya/ändrade bildformat
+- `Defaultvarden` - Standardinställningar för markeringar
+
+**DIM Klient:**
+- `Lyssnarport` - Ändrar serveranslutning
+- `ServiceURL` - Ändrar serveradress
+
+#### Riskbedömning för ändringar
+
+| Ändringstyp | Risknivå | Rekommenderad tid | Pre-validering |
+|-------------|----------|------------------|---------------|
+| **Portändring** | 🔴 Hög | Underhållsfönster | Testa porttillgänglighet |
+| **Ny säkerhetsklassificering** | 🟡 Medium | Arbetstid | Validera JSON-syntax |
+| **Nya standardvärden** | 🟢 Låg | Arbetstid | API-test efter omstart |
+| **Ny organisation** | 🟢 Låg | Arbetstid | Visuell verifiering |
+
+### 7.4 Säkert ändringsförfarande
+
+#### Pre-change checklist
+Innan du genomför någon konfigurationsändring:
+
+- [ ] **Dokumentera ändringen:** Vad, varför, när, vem
+- [ ] **Testa i utvecklingsmiljö** (om tillgänglig)
+- [ ] **Informera berörda användare** om planerat avbrott
+- [ ] **Välj lämplig tid:** Underhållsfönster eller låg belastning
+- [ ] **Säkerställ tillgång till backup** och rollback-procedur
+
+#### Steg 1: Förberedelser och backup
+
 ```cmd
+# Skapa backup-katalog med tidsstämpel
+set BACKUP_TIME=%date:~0,4%%date:~5,2%%date:~8,2%_%time:~0,2%%time:~3,2%
+mkdir "C:\ProgramData\DIM\Backup\%BACKUP_TIME%"
+
 # Säkerhetskopiera DIMService-konfiguration
-copy "C:\ProgramData\DIM\Config\config DIMService.json" "C:\ProgramData\DIM\Config\config DIMService.json.backup"
+copy "C:\ProgramData\DIM\Config\config DIMService.json" "C:\ProgramData\DIM\Backup\%BACKUP_TIME%\config DIMService.json"
 
 # Säkerhetskopiera DIM-klientkonfiguration  
-copy "C:\ProgramData\DIM\Config\config DIM.json" "C:\ProgramData\DIM\Config\config DIM.json.backup"
+copy "C:\ProgramData\DIM\Config\config DIM.json" "C:\ProgramData\DIM\Backup\%BACKUP_TIME%\config DIM.json"
+
+# Säkerhetskopiera eventuella anpassade konfigurationer
+xcopy "C:\ProgramData\DIM\Config\*" "C:\ProgramData\DIM\Backup\%BACKUP_TIME%\" /E /Y
+
+echo Backup completerat: C:\ProgramData\DIM\Backup\%BACKUP_TIME%\
 ```
 
-#### Steg 2: Validera JSON-syntax
+#### Steg 2: Pre-change validering
+
 ```cmd
-# Validera med PowerShell
-powershell -Command "Get-Content 'C:\ProgramData\DIM\Config\config DIMService.json' | ConvertFrom-Json"
+# Validera nuvarande konfiguration med PowerShell
+powershell -Command "
+try { 
+    $config = Get-Content 'C:\ProgramData\DIM\Config\config DIMService.json' | ConvertFrom-Json; 
+    Write-Host 'Nuvarande konfiguration OK' -ForegroundColor Green 
+} catch { 
+    Write-Host 'VARNING: Nuvarande konfiguration felaktig!' -ForegroundColor Red; 
+    Write-Host $_.Exception.Message 
+}"
 
-# Om ingen felutskrift = giltigt JSON
-```
-
-#### Steg 3: Stoppa tjänster
-```cmd
-# Stoppa DIMService
-net stop DIMService
-
-# Stäng DIM-klientapplikationer
-taskkill /IM DIM.exe /F
-```
-
-#### Steg 4: Implementera ändringar
-- Redigera konfigurationsfiler med valfri texteditor
-- Säkerställ UTF-8-kodning utan BOM
-- Kontrollera JSON-syntax
-
-#### Steg 5: Starta tjänster och verifiera
-```cmd
-# Starta DIMService
-net start DIMService
-
-# Kontrollera att tjänsten startat korrekt
+# Kontrollera tjänstestatus före ändring
 sc query DIMService
 
-# Testa konfiguration via API
+# Testa API före ändring
 curl http://localhost:5001/config
 ```
 
-### 7.3 Vanliga ändringsscenarier
+#### Steg 3: Kontrollerad tjänstestopp
 
-#### Ändra lyssnarport
-1. **Uppdatera DIMService-config:**
+```cmd
+# Kontrollera vilka processer som använder DIM
+tasklist | findstr /I "DIM"
+
+# Logga vilka användare som är anslutna (om tillämpligt)
+netstat -an | findstr :5001
+
+# Stoppa DIMService med timeout
+sc stop DIMService
+
+# Vänta på att tjänsten stoppas (max 30 sekunder)
+timeout /t 30 /nobreak
+
+# Verifiera att tjänsten stoppats
+sc query DIMService | findstr "STATE"
+
+# Stäng eventuella DIM-klientapplikationer
+taskkill /IM DIM.exe /F 2>nul
+echo Klientapplikationer stängda
+```
+
+#### Steg 4: Implementera ändringar
+
+**För portändringar (hög risk):**
+```cmd
+# Kontrollera att ny port är ledig
+netstat -an | findstr :8080
+# Ska inte returnera några resultat
+
+# Testa att binda till ny port (Windows)
+powershell -Command "
+$listener = [System.Net.HttpListener]::new()
+$listener.Prefixes.Add('http://localhost:8080/')
+try { 
+    $listener.Start()
+    Write-Host 'Port 8080 är ledig' -ForegroundColor Green
+    $listener.Stop()
+} catch {
+    Write-Host 'Port 8080 är UPPTAGEN!' -ForegroundColor Red
+}"
+```
+
+**För konfigurationsredigering:**
+```cmd
+# Använd en robust texteditor med JSON-validering
+# Rekommenderade editorer: VS Code, Notepad++, PowerShell ISE
+
+# VIKTIGT: Säkerställ UTF-8 kodning utan BOM
+# VS Code: Ctrl+Shift+P > "Change File Encoding" > "UTF-8"
+# Notepad++: Encoding > "UTF-8 without BOM"
+```
+
+**Syntax-validering under redigering:**
+```cmd
+# Realtidsvalidering under redigering (PowerShell)
+powershell -Command "
+while ($true) {
+    try {
+        $config = Get-Content 'C:\ProgramData\DIM\Config\config DIMService.json' | ConvertFrom-Json
+        Write-Host 'JSON OK' -ForegroundColor Green
+    } catch {
+        Write-Host 'JSON SYNTAX ERROR!' -ForegroundColor Red
+        Write-Host $_.Exception.Message
+    }
+    Start-Sleep 2
+}"
+```
+
+#### Steg 5: Post-change validering och start
+
+```cmd
+# Slutlig JSON-validering före tjänstestart
+powershell -Command "
+try { 
+    $config = Get-Content 'C:\ProgramData\DIM\Config\config DIMService.json' | ConvertFrom-Json
+    Write-Host 'Konfiguration validerad OK' -ForegroundColor Green
+    Write-Host 'Lyssnarport:' $config.Lyssnarport
+    Write-Host 'Antal sekretessklassificeringar:' $config.Sekretess.Count
+} catch { 
+    Write-Host 'KRITISKT FEL: JSON-syntax felaktig!' -ForegroundColor Red
+    Write-Host $_.Exception.Message
+    exit 1
+}"
+
+# Starta DIMService med timeout
+net start DIMService
+
+# Vänta på tjänstestart
+timeout /t 10 /nobreak
+
+# Kontrollera att tjänsten startat korrekt
+sc query DIMService | findstr "STATE"
+
+# Kontrollera att tjänsten lyssnar på korrekt port
+netstat -an | findstr :5001
+```
+
+#### Steg 6: Funktionsverifiering
+
+```cmd
+# Grundläggande API-test
+curl http://localhost:5001/config
+
+# Detaljerat API-test
+powershell -Command "
+$baseUrl = 'http://localhost:5001'
+$endpoints = @('/config', '/defaultvarden', '/format')
+
+foreach ($endpoint in $endpoints) {
+    try {
+        $response = Invoke-RestMethod -Uri `"$baseUrl$endpoint`" -Method Get -TimeoutSec 10
+        Write-Host `"✓ $endpoint : OK`" -ForegroundColor Green
+    } catch {
+        Write-Host `"✗ $endpoint : FAILED - $($_.Exception.Message)`" -ForegroundColor Red
+    }
+}
+"
+
+# Testa från DIM-klient (om installerad)
+if (Test-Path "C:\Program Files\DIM\DIM\DIM.exe") {
+    echo "Starta DIM-klient och verifiera anslutning manuellt"
+    start "C:\Program Files\DIM\DIM\DIM.exe"
+}
+```
+
+#### Rollback-procedur (vid problem)
+
+```cmd
+# Om något går fel - snabb rollback
+echo "ROLLBACK INITIERAD"
+
+# Stoppa tjänsten
+net stop DIMService
+
+# Återställ från backup
+copy "C:\ProgramData\DIM\Backup\%BACKUP_TIME%\config DIMService.json" "C:\ProgramData\DIM\Config\config DIMService.json" /Y
+copy "C:\ProgramData\DIM\Backup\%BACKUP_TIME%\config DIM.json" "C:\ProgramData\DIM\Config\config DIM.json" /Y
+
+# Starta om tjänsten
+net start DIMService
+
+# Verifiera rollback
+curl http://localhost:5001/config
+
+echo "Rollback genomförd - kontrollera att systemet fungerar"
+```
+
+### 7.5 Vanliga ändringsscenarier
+
+#### Scenario 1: Ändra lyssnarport (Hög risk)
+
+**Bakgrund:** Standard port 5001 kolliderar med annan tjänst eller säkerhetspolicy kräver annan port.
+
+**Steg för implementering:**
+
+1. **Pre-validering:**
+   ```cmd
+   # Kontrollera vilka portar som är lediga
+   netstat -an | findstr /C:":8080 "
+   
+   # Testa portbindning
+   powershell -Command "
+   $port = 8080
+   try {
+       $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Any, $port)
+       $listener.Start()
+       Write-Host 'Port $port är ledig' -ForegroundColor Green
+       $listener.Stop()
+   } catch {
+       Write-Host 'Port $port är UPPTAGEN!' -ForegroundColor Red
+   }"
+   ```
+
+2. **Uppdatera DIMService-config:**
    ```json
    {
      "Lyssnarport": 8080,
-     ...
+     "Defaultvarden": [ ... ],
+     "Format": [ ... ],
+     "Sekretess": [ ... ]
    }
    ```
 
-2. **Uppdatera alla klient-configs:**
+3. **Uppdatera alla klient-configs:**
    ```json
    {
      "Lyssnarport": 8080,
@@ -690,25 +913,90 @@ curl http://localhost:5001/config
    }
    ```
 
-3. **Uppdatera brandväggsinställningar:**
+4. **Brandväggsinställningar:**
    ```cmd
+   # Ta bort gammal regel
+   netsh advfirewall firewall delete rule name="DIMService-5001"
+   
+   # Lägg till ny regel
    netsh advfirewall firewall add rule name="DIMService-8080" dir=in action=allow protocol=TCP localport=8080
+   
+   # Verifiera regel
+   netsh advfirewall firewall show rule name="DIMService-8080"
    ```
 
-#### Lägga till ny säkerhetsklassificering
+5. **Omstart och verifiering:**
+   ```cmd
+   net stop DIMService
+   net start DIMService
+   
+   # Kontrollera att tjänsten lyssnar på ny port
+   netstat -an | findstr :8080
+   
+   # Testa API på ny port
+   curl http://localhost:8080/config
+   ```
+
+#### Scenario 2: Lägga till ny säkerhetsklassificering
+
+**Bakgrund:** Organisationen inför ny klassificering enligt SÄKSKYDDSFÖRORDNINGEN.
+
+**Fullständig konfiguration:**
 ```json
 {
   "Sekretess": [
     {
+      "Kod": "Offentlig",
+      "Text": "OFFENTLIG",
+      "HarParagrafer": false,
+      "HarSSK": false,
+      "Paragrafer": [],
+      "SSK": []
+    },
+    {
+      "Kod": "Begransad",
+      "Text": "BEGRÄNSAD",
+      "HarParagrafer": true,
+      "HarSSK": true,
+      "Paragrafer": [
+        {
+          "Kod": "P21K3",
+          "Text": "21 kap. 3 §",
+          "Beskrivning": "Allmän sekretessparagraf"
+        }
+      ],
+      "SSK": [
+        {
+          "Kod": "K1",
+          "Text": "SKYDDSKLASS 1"
+        }
+      ]
+    },
+    {
       "Kod": "Kvalificerad",
       "Text": "KVALIFICERAD SEKRETESS", 
       "HarParagrafer": true,
-      "HarSSK": false,
+      "HarSSK": true,
       "Paragrafer": [
         {
           "Kod": "P26K1",
           "Text": "26 kap. 1 §",
           "Beskrivning": "Ekonomisk information"
+        },
+        {
+          "Kod": "P19K1",
+          "Text": "19 kap. 1 §",
+          "Beskrivning": "Internationella relationer"
+        }
+      ],
+      "SSK": [
+        {
+          "Kod": "K2",
+          "Text": "SKYDDSKLASS 2"
+        },
+        {
+          "Kod": "K3", 
+          "Text": "SKYDDSKLASS 3"
         }
       ]
     }
@@ -716,22 +1004,122 @@ curl http://localhost:5001/config
 }
 ```
 
-#### Ändra standardvärden
+**Validering efter ändring:**
+```cmd
+# Testa att ny klassificering finns tillgänglig
+curl http://localhost:5001/config | findstr "Kvalificerad"
+
+# Kontrollera att paragrafer laddats korrekt
+curl http://localhost:5001/paragrafer
+
+# Kontrollera SSK-klasser
+curl http://localhost:5001/ssk
+```
+
+#### Scenario 3: Ändra standardvärden för organisation
+
+**Bakgrund:** Byte av organisationsnamn eller standardinställningar.
+
 ```json
 {
   "Defaultvarden": [
     {
       "Kod": "VerksamhetNamn",
-      "Text": "Min Organisation\r\n(MO)",
+      "Text": "NYTT ORGANISATIONSNAMN\r\n(KORT)",
       "Varde": 0
     },
     {
-      "Kod": "Bredd", 
+      "Kod": "Bredd",
       "Text": "",
-      "Varde": 400
+      "Varde": 450
+    },
+    {
+      "Kod": "Hoger", 
+      "Text": "",
+      "Varde": 25
+    },
+    {
+      "Kod": "Ner",
+      "Text": "",
+      "Varde": 25
     }
   ]
 }
+```
+
+**Verifiering:**
+```cmd
+# Kontrollera standardvärden via API
+curl http://localhost:5001/defaultvarden
+
+# Starta DIM-klient och kontrollera visuellt att nya standardvärden används
+start "C:\Program Files\DIM\DIM\DIM.exe"
+```
+
+#### Scenario 4: Aktivera/inaktivera bildformat
+
+**Bakgrund:** Organisationen behöver begränsa eller utöka tillgängliga exportformat.
+
+```json
+{
+  "Format": [
+    {
+      "Kod": "emf",
+      "Text": "Enhanced Metafile (EMF)",
+      "Aktiv": true,
+      "Beskrivning": "Rekommenderat format för Office-dokument"
+    },
+    {
+      "Kod": "png", 
+      "Text": "Portable Network Graphics (PNG)",
+      "Aktiv": true,
+      "Beskrivning": "Bitmapformat för webbanvändning"
+    },
+    {
+      "Kod": "svg",
+      "Text": "Scalable Vector Graphics (SVG)", 
+      "Aktiv": false,
+      "Beskrivning": "Vektorformat - INAKTIVERAT pga kompatibilitetsproblem"
+    }
+  ]
+}
+```
+
+**Praktiska överväganden:**
+- **EMF:** Rekommenderas för Word/Excel-integration
+- **PNG:** Bra för webbapplikationer och e-post
+- **SVG:** Endast om målsystemet stöder formatet fullt ut
+
+#### Scenario 5: Nätverkskonfiguration för fjärråtkomst
+
+**Bakgrund:** DIMService behöver nås från andra datorer i nätverket.
+
+**DIMService-konfiguration:**
+```json
+{
+  "Lyssnarport": 5001,
+  "BindAddress": "0.0.0.0"
+}
+```
+
+**Klient-konfiguration på fjärrdatorer:**
+```json
+{
+  "Lyssnarport": 5001,
+  "ServiceURL": "192.168.1.100"
+}
+```
+
+**Säkerhetsinställningar:**
+```cmd
+# Brandvägg på servern
+netsh advfirewall firewall add rule name="DIMService-Remote" dir=in action=allow protocol=TCP localport=5001 remoteip=192.168.1.0/24
+
+# Kontrollera anslutning från fjärrdator
+telnet 192.168.1.100 5001
+
+# Testa API från fjärrdator
+curl http://192.168.1.100:5001/config
 ```
 
 ---
