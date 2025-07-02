@@ -208,14 +208,21 @@ För djupgående information om specifika tekniska aspekter, se följande dokume
 
 ---
 
-## Support och kontakt
+## Support och vidare läsning
 
-För teknisk support och frågor relaterade till DIM-systemet:
+### Utökad teknisk dokumentation:
+För djupgående teknisk information, se dokumenten listade i avsnittet [Utökad teknisk dokumentation](#utökad-teknisk-dokumentation) ovan:
+- **Konfigurationshantering** - Detaljerad JSON-konfiguration och API-validering
+- **MSI-installation och leverans** - Avancerad installation och deployment
+- **HTTP API-endpoints** - Systemövervakning och diagnostik via API
 
+### Support:
 - **Utvecklare:** Dynalab AB    www.dynalab.se
+- **Systemdiagnostik:** Använd `http://localhost:5001/isrunning` för snabb statuskontroll
 
 **Vid supportärenden, inkludera:**
-- Operativsystemversion
-- DIM-version  
-- Beskrivning av problemet
+- Operativsystemversion (Windows 10/11)
+- DIM-version (från MSI-filnamn eller `/config` endpoint)
+- Beskrivning av problemet och steg för att återskapa
 - Relevanta loggfiler från `C:\ProgramData\DIM\Logs\`
+- Resultat från `http://localhost:5001/fellogg` (om DIMService körs)
