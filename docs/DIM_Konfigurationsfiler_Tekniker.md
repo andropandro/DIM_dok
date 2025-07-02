@@ -544,7 +544,37 @@ Bredd: 302
 
 ## 6. Konfigurationshantering
 
+### Vad innebär konfigurationshantering för dig som tekniker?
+
+Konfigurationshantering är **hjärtat i DIM-systemets funktion** och en av de viktigaste aspekterna att förstå för en tekniker. När DIMService eller DIM-klienten startar måste de läsa sina konfigurationsfiler för att veta hur de ska fungera. Detta är inte bara en teknisk detalj - det påverkar direkt systemets tillgänglighet och funktion.
+
+#### Varför är detta kritiskt att förstå?
+
+**🚨 Konsekvenser av felaktig konfiguration:**
+- **DIMService startar inte** → Ingen stämpelgenerering möjlig
+- **DIM-klient kan inte ansluta** → Användare kan inte skapa stämplar
+- **Felaktig portinställning** → Kommunikationsproblem mellan komponenter
+- **Korrupt JSON-syntax** → Fullständigt systemstopp
+
+**✅ Framgångsrik konfigurationshantering ger:**
+- Smidig systemstart utan manuella ingrepp
+- Tillförlitlig kommunikation mellan komponenter  
+- Förutsägbart systembeteende
+- Enkel felsökning när problem uppstår
+
+#### Hur fungerar processen?
+
+Varje gång DIMService eller DIM-klienten startar genomgår de en **kritisk valideringsprocess** där konfigurationsfilen kontrolleras i flera steg. Om något steg misslyckas **stoppas hela applikationen** för att förhindra oförutsägbart beteende.
+
+Som tekniker behöver du förstå denna process för att:
+- **Diagnostisera varför** en applikation inte startar
+- **Validera konfigurationsändringar** innan du implementerar dem
+- **Förstå felmeddelanden** i loggarna
+- **Planera underhåll** och uppdateringar säkert
+
 ### 6.1 Inläsning och validering
+
+Nedanstående diagram visar **exakt vad som händer** när DIMService startar och läser sin konfigurationsfil. Varje steg måste lyckas för att tjänsten ska starta framgångsrikt.
 
 ```mermaid
 flowchart TD
@@ -594,15 +624,46 @@ flowchart TD
     class CONFIG_READY success
 ```
 
+#### Förklaring av valideringsprocessen
+
+**🔍 Vad händer i praktiken:**
+
+1. **Filkontroll** - Systemet kontrollerar att konfigurationsfilen finns på rätt plats (`C:\ProgramData\DIM\Config\`)
+2. **JSON-parsing** - Filen läses och parsas för att säkerställa korrekt JSON-syntax  
+3. **Innehållsvalidering** - Obligatoriska fält och sektioner kontrolleras (t.ex. att `Sekretess`-sektionen finns)
+4. **Konfigurationsladdning** - Data laddas in i systemets minne för användning
+
+**⚠️ Viktigt att förstå:**
+- **Ett enda fel stoppar hela processen** - systemet tolererar inga konfigurationsfel
+- **Felet loggas alltid** till `C:\ProgramData\DIM\Logs\` för senare analys
+- **Tjänsten/applikationen avslutas** med felkod - ingen partiell start möjlig
+- **Automatisk återstart** (för DIMService) kommer att misslyckas om konfigurationen är felaktig
+
+**🛠️ Som tekniker innebär detta:**
+- **Testa alltid konfigurationsändringar** med JSON-validering innan omstart
+- **Övervaka loggarna** efter konfigurationsändringar
+- **Ha backup-plan klar** för snabb återställning vid problem
+- **Förstå att systemet "failar säkert"** - hellre ingen tjänst än felkonfigurerad tjänst
+
 ### 6.2 Valideringsregler
 
-| Validering | Kontroll | Felmeddelande |
-|------------|----------|---------------|
-| **Filexistens** | `File.Exists(_filePath)` | `"Kunde inte hitta config-fil: {_filePath}"` |
-| **JSON-syntax** | `JsonSerializer.Deserialize<KonfigData>(json)` | `"Felaktigt format i config DIMService.json."` |
-| **Obligatoriska fält** | `data.Sekretess != null` | `"Felaktigt format i config DIMService.json."` |
+**Teknisk referens:** Dessa kontroller utförs alltid när konfigurationen läses.
+
+| Validering | Kontroll | Felmeddelande | Tekniker-åtgärd |
+|------------|----------|---------------|----------------|
+| **Filexistens** | `File.Exists(_filePath)` | `"Kunde inte hitta config-fil: {_filePath}"` | Kontrollera att filen finns och är tillgänglig |
+| **JSON-syntax** | `JsonSerializer.Deserialize<KonfigData>(json)` | `"Felaktigt format i config DIMService.json."` | Validera JSON med editor eller PowerShell |
+| **Obligatoriska fält** | `data.Sekretess != null` | `"Felaktigt format i config DIMService.json."` | Säkerställ att alla required sektioner finns |
+
+**💡 Praktiska valideringstips:**
+- **JSON-validering:** Använd `Get-Content file.json | ConvertFrom-Json` i PowerShell
+- **Filrättigheter:** Kontrollera att NetworkService har läsrättigheter  
+- **Encoding:** Spara alltid som UTF-8 utan BOM
+- **Backup:** Validera att backup-filer också är korrekta
 
 ### 6.3 Felloggar
+
+**För tekniker:** När konfigurationsfel uppstår skapas alltid detaljerade loggar som hjälper dig att diagnostisera problemet snabbt.
 
 **Loggningsplacering:** `C:\ProgramData\DIM\Logs\`
 
