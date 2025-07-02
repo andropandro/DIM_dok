@@ -18,13 +18,84 @@
 
 ## 1. Översikt
 
+**För dig som tekniker:** Detta avsnitt ger dig grundläggande förståelse för vad DIM-systemet är, varför det levereras som MSI-paket och vad det innebär för din dagliga drift och underhåll.
+
 ### 1.1 Vad är DIM?
-DIM (Digital InformationsMarkering) är ett system för att skapa och applicera säkerhetsklassificeringar och markeringar på digitala dokument. Systemet består av två huvudkomponenter som levereras i ett sammanhållet MSI-paket.
+
+**Systemets syfte och funktion:**
+DIM (Digital Informationsmarkering) är ett system för att skapa och applicera säkerhetsklassificeringar och markeringar på digitala dokument enligt svenska offentlighets- och sekretesslagen (OSL). Systemet består av två huvudkomponenter som levereras i ett sammanhållet MSI-paket.
+
+#### Varför behövs detta system?
+
+**🏛️ Juridisk grund:**
+- Svenska myndigheter är **enligt lag** skyldiga att klassificera dokument korrekt
+- **OSL (Offentlighets- och sekretesslagen)** kräver tydlig markering av sekretessgrad
+- **Felaktig klassificering** kan leda till juridiska konsekvenser för organisationen
+- **Standardiserad markering** säkerställer regelefterlevnad
+
+**📋 Praktisk nytta för organisationer:**
+- **Automatiserad process** istället för manuell stämpelhantering
+- **Konsekvent utseende** på alla säkerhetsmarkeringar
+- **Digital integration** med befintliga dokumentflöden
+- **Spårbarhet** av alla säkerhetsklassificeringar
+
+**👥 Vad det innebär för dig som tekniker:**
+- Du installerar och underhåller ett **juridiskt kritiskt system**
+- **Tillgänglighet är avgörande** - organisationen kan inte klassificera dokument utan systemet
+- **Säkerhetsaspekter** måste tas på allvar - felaktig konfiguration kan få juridiska konsekvenser
+- **Backup och kontinuitet** är kritiska för verksamheten
 
 ### 1.2 Leveransformat
+
+**Varför MSI-paket?**
+
 DIM levereras som en Windows Installer-fil (`.msi`) med namnet `DIM_X_X_X_X.msi` där X_X_X_X representerar versionsnumret med understreck (t.ex. `DIM_1_0_0_354.msi`).
 
+#### Fördelar med MSI för tekniker:
+
+**🔧 Professionell installation:**
+- **Windows-standard** för företagsapplikationer
+- **Automatisk registrering** av tjänster och komponenter
+- **Korrekt filbehörigheter** sätts automatiskt
+- **Windows Add/Remove Programs** integration
+
+**📦 Flexibel deployment:**
+- **Silent installation** för massutrollning
+- **Feature-baserad installation** - välj endast nödvändiga komponenter
+- **Kommandoradsparametrar** för automatisering
+- **Group Policy deployment** möjlig
+
+**🔄 Pålitlig underhåll:**
+- **Versionskontroll** inbyggd i filnamnet
+- **Automatisk uppgradering** med major upgrade-logik
+- **Ren avinstallation** - inga kvarvarande filer
+- **Rollback-möjlighet** vid problem
+
+**⚠️ Vad du behöver veta som tekniker:**
+- **Administratörsbehörighet krävs** för installation
+- **Endast en version** kan vara installerad åt gången
+- **Tjänstestopp** sker automatiskt vid uppgradering
+- **Konfigurationsfiler bevaras** vid uppgradering
+
 ### 1.3 Systemöversikt
+
+**För tekniker:** Nedanstående diagram visar **exakt vad som installeras** och **var det placeras** när du kör MSI-paketet. Förstå denna struktur för att kunna supportera, felsöka och underhålla systemet effektivt.
+
+#### Vad händer under installationen?
+
+**📥 MSI-paketet** (`DIM_1_0_0_354.msi`) innehåller allt som behövs för en komplett installation, men du kan välja att installera endast de delar du behöver genom att specificera olika "features".
+
+**🎯 Installationsstrategi för olika scenarier:**
+- **Lokal installation:** Installera båda komponenter på samma maskin (standard)
+- **Centraliserad arkitektur:** DIMService på server, DIM-klient på arbetsstationer
+- **Endast backend:** Bara DIMService för automatiserade system utan GUI
+- **Endast frontend:** Bara DIM-klient som ansluter till extern DIMService
+
+**💡 Viktigt att förstå:** Varje "feature" i MSI:n skapar specifika filer och kataloger. Som tekniker behöver du veta var allt hamnar för att kunna:
+- **Felsöka** när något inte fungerar
+- **Säkerhetskopiera** kritiska konfigurationer
+- **Övervaka** loggfiler och prestanda
+- **Rengöra** vid avinstallation eller uppgradering
 
 ```mermaid
 graph TB
@@ -73,6 +144,57 @@ graph TB
     class CONFIG,LOGS,TEMP config
     class DESKTOP,STARTMENU ui
 ```
+
+#### Förklaring av systemstrukturen
+
+**🗂️ Filsystemslayout förklarad för tekniker:**
+
+**Program Files (`C:\Program Files\DIM\`)**
+- **Vad:** Själva programfilerna och runtime-bibliotek
+- **Behörigheter:** Endast administratörer kan ändra
+- **Backup:** Nej, återskapas vid ominstallation
+- **Tekniker-tips:** Här ligger .exe-filerna du startar manuellt vid felsökning
+
+**ProgramData (`C:\ProgramData\DIM\`)**
+- **Vad:** Konfiguration, loggar och temporära filer
+- **Behörigheter:** NetworkService och administratörer har skrivaccess
+- **Backup:** JA - kritiskt att säkerhetskopiera Config-mappen
+- **Tekniker-tips:** Din viktigaste mapp för felsökning och underhåll
+
+**Användargenvägar**
+- **Vad:** Skrivbord och startmeny-genvägar till DIM-klienten
+- **Skapas:** Endast om DIMClientFeature installeras
+- **Tekniker-tips:** Om genvägar saknas - kontrollera att feature installerades
+
+#### Kommunikationsflöde
+
+**🔄 Hur komponenterna pratar med varandra:**
+
+1. **DIMService** startar automatiskt som Windows-tjänst
+2. **Lyssnar på port 5001** för HTTP-anrop
+3. **DIM-klient** ansluter via HTTP till localhost:5001
+4. **Alla konfigurationer** läses från ProgramData-mappen
+5. **Loggar** skrivs automatiskt för felsökning
+
+**⚠️ Kritiska beroenden att övervaka:**
+- **Port 5001** måste vara ledig för DIMService
+- **NetworkService** måste ha rättigheter till ProgramData
+- **Båda komponenter** måste ha samma portkonfiguration
+- **Brandvägg** får inte blockera lokal HTTP-trafik
+
+#### Din roll som tekniker efter installation
+
+**🛠️ Vad du behöver göra regelbundet:**
+- **Övervaka** att DIMService-tjänsten körs
+- **Kontrollera** loggfiler i `C:\ProgramData\DIM\Logs\`
+- **Säkerhetskopiera** konfigurationsfiler regelbundet
+- **Testa** anslutning mellan klient och tjänst
+
+**🚨 Tecken på problem att hålla utkik efter:**
+- DIMService-tjänsten stoppas oväntat
+- Felmeddelanden i Windows Event Log
+- DIM-klient kan inte ansluta till tjänsten
+- Ökande storlek på Temp-mappen (indikerar felhantening)
 
 ---
 
