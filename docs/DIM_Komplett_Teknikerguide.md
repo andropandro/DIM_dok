@@ -1086,16 +1086,3 @@ Write-Host "=== Health Check Complete ===" -ForegroundColor Cyan
 2. **Utveckla** anpassade övervakningslösningar
 3. **Integrera** med befintliga driftrutiner
 4. **Bidra** till utveckling av bästa praxis
-
-### 18.4 PDF-konvertering och dokumenthantering
-
-**För att konvertera detta dokument till PDF:**
-1. Använd Markdown-till-PDF verktyg som stöder Mermaid-diagram
-2. Alternativt: Öppna i GitHub och använd webbläsarens "Spara som PDF"
-3. För professionella PDF:er: Använd verktyg som Pandoc med LaTeX-backend
-
-**Tips för bästa PDF-resultat:**
-- Alla diagram renderas korrekt i GitHub
-- Tabeller behåller sin formatering
-- Kodblock och syntax highlighting bevaras
-- Innehållsförteckningen blir klickbar i många PDF-läsare 
